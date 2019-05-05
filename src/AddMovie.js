@@ -59,5 +59,5 @@ export default styled(AddMovie)`
   padding: 2rem;
   margin: 1rem;
   background: lavender;
-  min-width: 140px;
+  width: 140px;
 `;
