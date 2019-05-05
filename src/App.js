@@ -25,57 +25,19 @@ const App = () => {
     let data = [];
     let titles = [];
     db.collection("movies")
+      .orderBy("created", "desc")
       .get()
       .then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
-          // doc.data() is never undefined for query doc snapshots
           data.push(doc.data());
-          titles.push(doc.id);
+          titles.push(doc.data().title);
           console.log(doc.id, " => ", doc.data());
         });
       });
-
-    // const key = "titles";
-    // if (localStorage.hasOwnProperty(key)) {
-    //   // get the key's value from localStorage
-    //   let value = localStorage.getItem(key);
-    //   // parse the localStorage string and setState
-    //   try {
-    //     value = JSON.parse(value);
-    //     setTitles(value);
-    //   } catch (e) {
-    //     // handle empty string
-    //     setTitles(value);
-    //   }
-    // }
     setMovieData(data);
+    setTitles(titles);
     setTimeout(() => setIsLoading(false), 1500);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     let data = [];
-  //     for (let title of titles) {
-  //       try {
-  //         title = title.trim();
-  //         const movieSearchString = title.replace(" ", "+");
-  //         const url = `https://www.omdbapi.com/?t=${movieSearchString}&plot=full&apikey=${API_KEY}`;
-  //         const res = await fetch(url);
-  //         const json = await res.json();
-  //         if (json.Response === "True") {
-  //           // add to firebase
-  //           await data.push(json);
-  //         }
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     }
-  //     setMovieData(data);
-  //   }
-  //   setTimeout(() => setIsLoading(false), 1500);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [isHydrated]);
 
   function capitalize(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -93,7 +55,8 @@ const App = () => {
           actors: newMovieAdded.actors,
           plot: newMovieAdded.plot,
           ratings: newMovieAdded.ratings,
-          poster: newMovieAdded.poster
+          poster: newMovieAdded.poster,
+          created: firebase.firestore.Timestamp.now()
         })
         .then(function(docRef) {
           console.log("Document written with ID: ", docRef.id);
@@ -103,10 +66,6 @@ const App = () => {
         });
     }
   }, [newMovieAdded]);
-
-  useEffect(() => {
-    localStorage.setItem("titles", JSON.stringify(titles));
-  }, [titles]);
 
   function handleAddMovie(movie) {
     setAlreadyAdded(false);
@@ -133,14 +92,19 @@ const App = () => {
             setTitles([newMovie.title, ...titles]);
             setMovieData([newMovie, ...movieData]);
             setNewMovieAdded(newMovie);
-          } else setNotFound(true);
+          } else {
+            setNotFound(true);
+            setTimeout(() => setNotFound(false), 2500);
+          }
         })
         .catch(error => {
           console.log(error);
           setNotFound(true);
+          setTimeout(() => setNotFound(false), 2500);
         });
     } else {
       setAlreadyAdded(true);
+      setTimeout(() => setAlreadyAdded(false), 2500);
     }
   }
 

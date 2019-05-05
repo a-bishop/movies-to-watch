@@ -3,15 +3,20 @@ import styled from "styled-components";
 
 const Submit = styled.input`
   border: 1px solid black;
+  border-radius: 5px;
+  background: cornflowerBlue;
   margin-top: 10px;
-  padding: 10px;
-  font-weight: bold;
+  padding: 8px;
   font-size: 1em;
+  font-weight: bold;
 `;
 
 const TextInput = styled.input`
   height: 2em;
   border: 1px solid black;
+  font-family: Futura;
+  font-weight: bold;
+  margin-top: 10px;
 `;
 
 const AddMovie = ({
@@ -32,11 +37,13 @@ const AddMovie = ({
     handleAddMovieCallback(movie.toLowerCase());
   }
 
-  let error = null;
+  let error;
   if (notFound) {
     error = <p>Movie not found!</p>;
   } else if (alreadyAdded) {
     error = <p>Movie already added!</p>;
+  } else {
+    error = null;
   }
 
   return (
@@ -59,5 +66,5 @@ export default styled(AddMovie)`
   padding: 2rem;
   margin: 1rem;
   background: lavender;
-  width: 140px;
+  width: 160px;
 `;
