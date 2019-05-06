@@ -173,6 +173,7 @@ const App = () => {
             ratings={movie.ratings}
             poster={movie.poster}
             handleDeleteMovieCallback={handleDeleteMovie}
+            isSignedIn={isSignedIn}
           />
         ))}
       </div>
