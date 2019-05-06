@@ -5,6 +5,7 @@ import AddMovie from "./AddMovie";
 import SignIn from "./SignIn";
 import config from "./config";
 import { SyncLoader } from "react-spinners";
+import styled from "styled-components";
 const firebase = require("firebase");
 // Required for side-effects
 require("firebase/firestore");
@@ -12,6 +13,11 @@ const FIREBASE = config.FIREBASE;
 firebase.initializeApp(FIREBASE);
 const db = firebase.firestore();
 const API_KEY = config.IMDB_KEY;
+
+const Main = styled.div`
+  display: flex;
+  flex-direction: ${window.innerWidth > 500 ? "row" : "column"};
+`;
 
 const App = () => {
   const [titles, setTitles] = useState([]);
@@ -22,6 +28,8 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState("");
+
+  console.log(window.innerWidth);
 
   firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
@@ -44,7 +52,6 @@ const App = () => {
         querySnapshot.forEach(function(doc) {
           data.push(doc.data());
           titles.push(doc.data().title);
-          console.log(doc.id, " => ", doc.data());
         });
       });
     setMovieData(data);
@@ -129,8 +136,9 @@ const App = () => {
   if (!isLoading) {
     main = (
       <div>
-        {movieData.map(movie => (
+        {movieData.map((movie, i) => (
           <Movie
+            index={i}
             key={movie.title}
             title={movie.title}
             year={movie.year}
@@ -167,13 +175,13 @@ const App = () => {
       .catch(function(error) {
         // Handle Errors here.
         console.log(error.code);
-        setSignInError(error.message);
+        setSignInError("There was an error with these credentials");
         setTimeout(() => setSignInError(""), 2500);
       });
   }
 
   let addMovie = (
-    <div style={{ minWidth: "250px" }}>
+    <div>
       <SignIn handleSignInCallback={handleSignIn} signInError={signInError}>
         Sign In
       </SignIn>
@@ -195,10 +203,10 @@ const App = () => {
   return (
     <div className="App">
       <h2 className="title">Movies to watch!</h2>
-      <div className="mainContainer">
+      <Main>
         {addMovie}
         {main}
-      </div>
+      </Main>
     </div>
   );
 };

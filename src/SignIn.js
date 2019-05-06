@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 
+const Title = styled.h4`
+  margin-top: 0;
+`;
+
 const Submit = styled.input`
   border: 1px solid black;
   border-radius: 5px;
@@ -17,6 +21,11 @@ const TextInput = styled.input`
   font-family: Futura;
   font-weight: bold;
   margin-top: 10px;
+`;
+
+const Error = styled.p`
+  margin-top: 10px;
+  color: red;
 `;
 
 const SignIn = ({ className, handleSignInCallback, signInError }) => {
@@ -38,6 +47,7 @@ const SignIn = ({ className, handleSignInCallback, signInError }) => {
 
   return (
     <form onSubmit={handleSignInCallback} className={className}>
+      <Title>Sign in to edit</Title>
       <label htmlFor="email">Email:</label>
       <TextInput
         type="email"
@@ -56,7 +66,7 @@ const SignIn = ({ className, handleSignInCallback, signInError }) => {
       </div>
       <Submit onClick={handleSignIn} type="submit" value="Sign In" />
       <br />
-      {signInError}
+      <Error>{signInError}</Error>
     </form>
   );
 };
@@ -64,7 +74,7 @@ const SignIn = ({ className, handleSignInCallback, signInError }) => {
 export default styled(SignIn)`
   border: 2px solid black;
   padding: 2rem;
-  margin: 1rem;
+  margin: 1rem 0 1rem 1rem;
   background: lavender;
   width: 160px;
 `;

@@ -19,13 +19,29 @@ const TextInput = styled.input`
   margin-top: 10px;
 `;
 
+const Form = styled.form`
+  border: 2px solid black;
+  padding: 2rem;
+  margin: 1rem 0 1rem 1rem;
+  background: lavender;
+  width: 160px;
+`;
+
 const SignOut = styled.button`
   border: 1px solid black;
   border-radius: 5px;
   background: mistyRose;
   margin-top: 10px;
+  margin-left: 20px;
   padding: 8px;
-  font-weight: bold;
+  align-self: flex-start;
+  font-size: 1em;
+  font-family: Futura;
+`;
+
+const Error = styled.p`
+  margin-top: 10px;
+  color: red;
 `;
 
 const AddMovie = ({
@@ -52,34 +68,34 @@ const AddMovie = ({
 
   let error;
   if (notFound) {
-    error = <p>Movie not found!</p>;
+    error = <Error>Movie not found!</Error>;
   } else if (alreadyAdded) {
-    error = <p>Movie already added!</p>;
+    error = <Error>Movie already added!</Error>;
   } else {
     error = null;
   }
 
   return (
-    <form onSubmit={handleSubmit} className={className}>
-      <label htmlFor="name">Add Movie:</label>
-      <TextInput
-        type="text"
-        id="addMovie"
-        onChange={handleSetMovie}
-        value={movie}
-      />
-      <Submit type="submit" value="Submit" />
-      <br />
+    <div className={className}>
+      <Form onSubmit={handleSubmit}>
+        <label htmlFor="name">Add Movie:</label>
+        <TextInput
+          type="text"
+          id="addMovie"
+          onChange={handleSetMovie}
+          value={movie}
+        />
+        <Submit type="submit" value="Submit" />
+        <br />
+        {error}
+      </Form>
       <SignOut onClick={handleSignOut}>Sign Out</SignOut>
-      {error}
-    </form>
+    </div>
   );
 };
 
 export default styled(AddMovie)`
-  border: 2px solid black;
-  padding: 2rem;
-  margin: 1rem;
-  background: lavender;
-  width: 160px;
+  display: flex;
+  flex-direction: column;
+  max-width: 250px;
 `;

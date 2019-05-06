@@ -7,7 +7,7 @@ const Poster = styled.img`
 `;
 
 const Title = styled.h3`
-  margin-top: 0px;
+  margin: 0;
 `;
 
 const Movie = ({
@@ -19,7 +19,8 @@ const Movie = ({
   actors,
   plot,
   ratings,
-  poster
+  poster,
+  index
 }) => {
   return (
     <div className={className}>
