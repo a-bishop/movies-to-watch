@@ -74,4 +74,5 @@ export default styled(Movie)`
   background: papayawhip;
   margin: 1rem;
   display: flex;
+  justify-content: space-between;
 `;
