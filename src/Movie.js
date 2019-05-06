@@ -10,6 +10,16 @@ const Title = styled.h3`
   margin: 0;
 `;
 
+const Delete = styled.button`
+  border: 1px solid black;
+  border-radius: 5px;
+  background: mistyRose;
+  margin-bottom: 10px;
+  padding: 8px;
+  font-size: 1em;
+  font-family: Futura;
+`;
+
 const Movie = ({
   className,
   title,
@@ -20,11 +30,14 @@ const Movie = ({
   plot,
   ratings,
   poster,
-  index
+  handleDeleteMovieCallback
 }) => {
   return (
     <div className={className}>
       <div>
+        <Delete onClick={() => handleDeleteMovieCallback(title)}>
+          Delete Movie
+        </Delete>
         <Title>{title}</Title>
         <ul>
           <li>{year}</li>
@@ -54,5 +67,4 @@ export default styled(Movie)`
   background: papayawhip;
   margin: 1rem;
   display: flex;
-  justify-content: space-between;
 `;

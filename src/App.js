@@ -25,6 +25,7 @@ const App = () => {
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState("");
+  const [movieDeleted, setMovieDeleted] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState("");
@@ -83,6 +84,20 @@ const App = () => {
     }
   }, [newMovieAdded]);
 
+  useEffect(() => {
+    if (movieDeleted !== "") {
+      db.collection("movies")
+        .doc(movieDeleted)
+        .delete()
+        .then(function() {
+          console.log("Movie successfully deleted!");
+        })
+        .catch(function(error) {
+          console.error("Error removing movie: ", error);
+        });
+    }
+  }, [movieDeleted]);
+
   function handleAddMovie(movie) {
     setAlreadyAdded(false);
     setNotFound(false);
@@ -124,6 +139,16 @@ const App = () => {
     }
   }
 
+  function handleDeleteMovie(title) {
+    const updatedMovies = movieData.filter(
+      eachMovie => eachMovie.title !== title
+    );
+    const updatedTitles = titles.filter(eachTitle => eachTitle !== title);
+    setTitles(updatedTitles);
+    setMovieData(updatedMovies);
+    setMovieDeleted(title);
+  }
+
   function capitalize(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
@@ -136,9 +161,8 @@ const App = () => {
   if (!isLoading) {
     main = (
       <div>
-        {movieData.map((movie, i) => (
+        {movieData.map(movie => (
           <Movie
-            index={i}
             key={movie.title}
             title={movie.title}
             year={movie.year}
@@ -148,6 +172,7 @@ const App = () => {
             plot={movie.plot}
             ratings={movie.ratings}
             poster={movie.poster}
+            handleDeleteMovieCallback={handleDeleteMovie}
           />
         ))}
       </div>
