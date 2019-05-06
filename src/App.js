@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import Movie from "./Movie";
 import AddMovie from "./AddMovie";
+import SignIn from "./SignIn";
 import config from "./config";
 import { SyncLoader } from "react-spinners";
 const firebase = require("firebase");
@@ -19,6 +20,18 @@ const App = () => {
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [signInError, setSignInError] = useState("");
+
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // User is signed in.
+      setIsSignedIn(true);
+    } else {
+      // No user is signed in.
+      setIsSignedIn(false);
+    }
+  });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -38,10 +51,6 @@ const App = () => {
     setTitles(titles);
     setTimeout(() => setIsLoading(false), 1500);
   }, []);
-
-  function capitalize(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
 
   useEffect(() => {
     if (newMovieAdded !== "") {
@@ -108,6 +117,10 @@ const App = () => {
     }
   }
 
+  function capitalize(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
   let main = (
     <div style={{ padding: "50px 0 0 50px" }}>
       <SyncLoader sizeUnit={"px"} size={40} color={"darkKhaki"} />
@@ -133,17 +146,57 @@ const App = () => {
     );
   }
 
+  function handleSignOut() {
+    firebase
+      .auth()
+      .signOut()
+      .then(function() {
+        // Sign-out successful.
+        console.log("signed out");
+      })
+      .catch(function(error) {
+        // An error happened.
+        console.log(error);
+      });
+  }
+
+  function handleSignIn(email, password) {
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .catch(function(error) {
+        // Handle Errors here.
+        console.log(error.code);
+        setSignInError(error.message);
+        setTimeout(() => setSignInError(""), 2500);
+      });
+  }
+
+  let addMovie = (
+    <div style={{ minWidth: "250px" }}>
+      <SignIn handleSignInCallback={handleSignIn} signInError={signInError}>
+        Sign In
+      </SignIn>
+    </div>
+  );
+  if (isSignedIn) {
+    addMovie = (
+      <div>
+        <AddMovie
+          handleAddMovieCallback={handleAddMovie}
+          handleSignOutCallback={handleSignOut}
+          alreadyAdded={alreadyAdded}
+          notFound={notFound}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
       <h2 className="title">Movies to watch!</h2>
       <div className="mainContainer">
-        <div>
-          <AddMovie
-            handleAddMovieCallback={handleAddMovie}
-            alreadyAdded={alreadyAdded}
-            notFound={notFound}
-          />
-        </div>
+        {addMovie}
         {main}
       </div>
     </div>

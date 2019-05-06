@@ -19,22 +19,35 @@ const TextInput = styled.input`
   margin-top: 10px;
 `;
 
+const SignOut = styled.button`
+  border: 1px solid black;
+  border-radius: 5px;
+  background: mistyRose;
+  margin-top: 10px;
+  padding: 8px;
+  font-weight: bold;
+`;
+
 const AddMovie = ({
   className,
   handleAddMovieCallback,
+  handleSignOutCallback,
   notFound,
   alreadyAdded
 }) => {
   const [movie, setMovie] = useState("");
 
   function handleSetMovie(e) {
-    e.preventDefault();
     setMovie(e.target.value);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
     handleAddMovieCallback(movie.toLowerCase());
+  }
+
+  function handleSignOut(e) {
+    handleSignOutCallback();
   }
 
   let error;
@@ -56,6 +69,8 @@ const AddMovie = ({
         value={movie}
       />
       <Submit type="submit" value="Submit" />
+      <br />
+      <SignOut onClick={handleSignOut}>Sign Out</SignOut>
       {error}
     </form>
   );
