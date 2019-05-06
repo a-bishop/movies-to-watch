@@ -44,8 +44,13 @@ const Error = styled.p`
   color: red;
 `;
 
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  max-width: 250px;
+`;
+
 const AddMovie = ({
-  className,
   handleAddMovieCallback,
   handleSignOutCallback,
   notFound,
@@ -76,7 +81,7 @@ const AddMovie = ({
   }
 
   return (
-    <div className={className}>
+    <Container>
       <Form onSubmit={handleSubmit}>
         <label htmlFor="name">Add Movie:</label>
         <TextInput
@@ -90,12 +95,8 @@ const AddMovie = ({
         {error}
       </Form>
       <SignOut onClick={handleSignOut}>Sign Out</SignOut>
-    </div>
+    </Container>
   );
 };
 
-export default styled(AddMovie)`
-  display: flex;
-  flex-direction: column;
-  max-width: 250px;
-`;
+export default AddMovie;

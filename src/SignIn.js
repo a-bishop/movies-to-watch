@@ -28,7 +28,15 @@ const Error = styled.p`
   color: red;
 `;
 
-const SignIn = ({ className, handleSignInCallback, signInError }) => {
+const Form = styled.form`
+  border: 2px solid black;
+  padding: 2rem;
+  margin: 1rem 0 1rem 1rem;
+  background: lavender;
+  width: 160px;
+`;
+
+const SignIn = ({ handleSignInCallback, signInError }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -46,7 +54,7 @@ const SignIn = ({ className, handleSignInCallback, signInError }) => {
   }
 
   return (
-    <form onSubmit={handleSignInCallback} className={className}>
+    <Form onSubmit={handleSignInCallback}>
       <Title>Sign in to edit</Title>
       <label htmlFor="email">Email:</label>
       <TextInput
@@ -67,14 +75,8 @@ const SignIn = ({ className, handleSignInCallback, signInError }) => {
       <Submit onClick={handleSignIn} type="submit" value="Sign In" />
       <br />
       <Error>{signInError}</Error>
-    </form>
+    </Form>
   );
 };
 
-export default styled(SignIn)`
-  border: 2px solid black;
-  padding: 2rem;
-  margin: 1rem 0 1rem 1rem;
-  background: lavender;
-  width: 160px;
-`;
+export default SignIn;
