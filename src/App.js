@@ -6,6 +6,7 @@ import SignIn from "./SignIn";
 import config from "./config";
 import { SyncLoader } from "react-spinners";
 import styled from "styled-components";
+
 const firebase = require("firebase");
 // Required for side-effects
 require("firebase/firestore");
@@ -21,6 +22,24 @@ const Main = styled.div`
 
 const Sort = styled.div`
   margin-left: 20px;
+  width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const Select = styled.select`
+  appearance: none;
+  background: lightGray;
+  background-image: none;
+  padding: 5px 10px 5px 10px;
+  height: 100%;
+  font-family: Futura;
+  font-size: 0.8em;
+  cursor: pointer;
+  border: 1px solid black;
+  border-radius: 3px;
+  text-align: center;
 `;
 
 const App = () => {
@@ -266,11 +285,11 @@ const App = () => {
         <div>
           <Sort>
             <h4>Sort by:</h4>
-            <select onChange={e => setSortSelected(e.target.value)}>
+            <Select onChange={e => setSortSelected(e.target.value)}>
               <option value="dateAdded">Date Added</option>
               <option value="releaseYear">Release Year</option>
               <option value="title">Title</option>
-            </select>
+            </Select>
           </Sort>
           {main}
         </div>
