@@ -8,7 +8,7 @@ const Submit = styled.input`
   margin-top: 10px;
   padding: 8px;
   font-size: 1em;
-  font-weight: bold;
+  font-family: Futura;
 `;
 
 const TextInput = styled.input`
@@ -27,18 +27,6 @@ const Form = styled.form`
   width: 160px;
 `;
 
-const SignOut = styled.button`
-  border: 1px solid black;
-  border-radius: 5px;
-  background: mistyRose;
-  margin-top: 10px;
-  margin-left: 20px;
-  padding: 8px;
-  align-self: flex-start;
-  font-size: 1em;
-  font-family: Futura;
-`;
-
 const Error = styled.p`
   margin-top: 10px;
   color: red;
@@ -50,12 +38,7 @@ const Container = styled.div`
   max-width: 250px;
 `;
 
-const AddMovie = ({
-  handleAddMovieCallback,
-  handleSignOutCallback,
-  notFound,
-  alreadyAdded
-}) => {
+const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
   const [movie, setMovie] = useState("");
 
   function handleSetMovie(e) {
@@ -65,10 +48,6 @@ const AddMovie = ({
   function handleSubmit(e) {
     e.preventDefault();
     handleAddMovieCallback(movie.toLowerCase());
-  }
-
-  function handleSignOut(e) {
-    handleSignOutCallback();
   }
 
   let error;
@@ -94,7 +73,6 @@ const AddMovie = ({
         <br />
         {error}
       </Form>
-      <SignOut onClick={handleSignOut}>Sign Out</SignOut>
     </Container>
   );
 };

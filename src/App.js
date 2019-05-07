@@ -29,17 +29,28 @@ const Sort = styled.div`
 `;
 
 const Select = styled.select`
-  appearance: none;
+  // appearance: none;
   background: lightGray;
   background-image: none;
   padding: 5px 10px 5px 10px;
   height: 100%;
   font-family: Futura;
-  font-size: 0.8em;
+  font-size: 1em;
   cursor: pointer;
   border: 1px solid black;
-  border-radius: 3px;
-  text-align: center;
+  border-radius: 5px;
+`;
+
+const SignOut = styled.button`
+  border: 1px solid black;
+  border-radius: 5px;
+  background: mistyRose;
+  margin-top: 10px;
+  margin-left: 20px;
+  padding: 8px;
+  width: 90px;
+  font-size: 0.8em;
+  font-family: Futura;
 `;
 
 const App = () => {
@@ -177,7 +188,7 @@ const App = () => {
   }
 
   function capitalize(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+    return string.replace(/\b\w/g, l => l.toUpperCase());
   }
 
   function handleSignOut() {
@@ -264,22 +275,32 @@ const App = () => {
       </SignIn>
     </div>
   );
+  let signOut = null;
   if (isSignedIn) {
     addMovie = (
       <div>
         <AddMovie
           handleAddMovieCallback={handleAddMovie}
-          handleSignOutCallback={handleSignOut}
           alreadyAdded={alreadyAdded}
           notFound={notFound}
         />
       </div>
     );
+    signOut = <SignOut onClick={handleSignOut}>Sign Out</SignOut>;
   }
 
   return (
     <div className="App">
-      <h2 className="title">Movies to watch!</h2>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start"
+        }}
+      >
+        <h2 className="title">Movies to watch!</h2>
+        {signOut}
+      </div>
       <Main>
         {addMovie}
         <div>

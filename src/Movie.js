@@ -16,7 +16,7 @@ const Delete = styled.button`
   background: mistyRose;
   margin-bottom: 10px;
   padding: 8px;
-  font-size: 1em;
+  font-size: 0.8em;
   font-family: Futura;
 `;
 

@@ -6,7 +6,8 @@
 }
 
 .title {
-  margin: 1rem;
+  margin-left: 1rem;
+  margin-bottom: 5px;
 }
 
 .App-logo {
