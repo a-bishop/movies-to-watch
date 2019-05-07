@@ -19,6 +19,10 @@ const Main = styled.div`
   flex-direction: ${window.innerWidth > 500 ? "row" : "column"};
 `;
 
+const Sort = styled.div`
+  margin-left: 20px;
+`;
+
 const App = () => {
   const [titles, setTitles] = useState([]);
   const [movieData, setMovieData] = useState([]);
@@ -29,6 +33,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState("");
+  const [sortSelected, setSortSelected] = React.useState("");
 
   console.log(window.innerWidth);
 
@@ -73,7 +78,7 @@ const App = () => {
           plot: newMovieAdded.plot,
           ratings: newMovieAdded.ratings,
           poster: newMovieAdded.poster,
-          created: firebase.firestore.Timestamp.now()
+          created: newMovieAdded.created
         })
         .then(function(docRef) {
           console.log("Document written with ID: ", docRef.id);
@@ -118,11 +123,13 @@ const App = () => {
               actors: json.Actors,
               plot: json.Plot,
               ratings: json.Ratings,
-              poster: json.Poster
+              poster: json.Poster,
+              created: firebase.firestore.Timestamp.now()
             };
             setTitles([newMovie.title, ...titles]);
-            setMovieData([newMovie, ...movieData]);
             setNewMovieAdded(newMovie);
+            setMovieData([newMovie, ...movieData]);
+            setNewMovieAdded("");
           } else {
             setNotFound(true);
             setTimeout(() => setNotFound(false), 2500);
@@ -147,37 +154,11 @@ const App = () => {
     setTitles(updatedTitles);
     setMovieData(updatedMovies);
     setMovieDeleted(title);
+    setMovieDeleted("");
   }
 
   function capitalize(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  let main = (
-    <div style={{ padding: "50px 0 0 50px" }}>
-      <SyncLoader sizeUnit={"px"} size={40} color={"darkKhaki"} />
-    </div>
-  );
-  if (!isLoading) {
-    main = (
-      <div>
-        {movieData.map(movie => (
-          <Movie
-            key={movie.title}
-            title={movie.title}
-            year={movie.year}
-            genre={movie.genre}
-            director={movie.director}
-            actors={movie.actors}
-            plot={movie.plot}
-            ratings={movie.ratings}
-            poster={movie.poster}
-            handleDeleteMovieCallback={handleDeleteMovie}
-            isSignedIn={isSignedIn}
-          />
-        ))}
-      </div>
-    );
   }
 
   function handleSignOut() {
@@ -206,6 +187,57 @@ const App = () => {
       });
   }
 
+  useEffect(() => {
+    let newData = [...movieData];
+    switch (sortSelected) {
+      case "dateAdded":
+        newData.sort((a, b) => (a.created > b.created ? -1 : 1));
+        setMovieData(newData);
+        break;
+      case "releaseYear":
+        newData.sort((a, b) => (a.year > b.year ? -1 : 1));
+        setMovieData(newData);
+        break;
+      case "title":
+        newData.sort((a, b) => (a.title > b.title ? 1 : -1));
+        setMovieData(newData);
+        break;
+      default:
+        break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortSelected]);
+
+  useEffect(() => {}, [movieData]);
+
+  let main = (
+    <div style={{ padding: "50px 0 0 50px" }}>
+      <SyncLoader sizeUnit={"px"} size={40} color={"darkKhaki"} />
+    </div>
+  );
+  if (!isLoading) {
+    main = (
+      <div>
+        {movieData.map((movie, i) => (
+          <Movie
+            index={i}
+            key={movie.title}
+            title={movie.title}
+            year={movie.year}
+            genre={movie.genre}
+            director={movie.director}
+            actors={movie.actors}
+            plot={movie.plot}
+            ratings={movie.ratings}
+            poster={movie.poster}
+            handleDeleteMovieCallback={handleDeleteMovie}
+            isSignedIn={isSignedIn}
+          />
+        ))}
+      </div>
+    );
+  }
+
   let addMovie = (
     <div>
       <SignIn handleSignInCallback={handleSignIn} signInError={signInError}>
@@ -231,7 +263,17 @@ const App = () => {
       <h2 className="title">Movies to watch!</h2>
       <Main>
         {addMovie}
-        {main}
+        <div>
+          <Sort>
+            <h4>Sort by:</h4>
+            <select onChange={e => setSortSelected(e.target.value)}>
+              <option value="dateAdded">Date Added</option>
+              <option value="releaseYear">Release Year</option>
+              <option value="title">Title</option>
+            </select>
+          </Sort>
+          {main}
+        </div>
       </Main>
     </div>
   );
