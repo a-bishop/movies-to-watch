@@ -159,7 +159,6 @@ const App = () => {
             setTitles([newMovie.title, ...titles]);
             setNewMovieAdded(newMovie);
             setMovieData([newMovie, ...movieData]);
-            setNewMovieAdded("");
           } else {
             setNotFound(true);
             setTimeout(() => setNotFound(false), 2500);
@@ -184,7 +183,6 @@ const App = () => {
     setTitles(updatedTitles);
     setMovieData(updatedMovies);
     setMovieDeleted(title);
-    setMovieDeleted("");
   }
 
   function capitalize(string) {
