@@ -17,7 +17,7 @@ const API_KEY = config.IMDB_KEY;
 
 const Main = styled.div`
   display: flex;
-  flex-direction: ${window.innerWidth > 500 ? "row" : "column"};
+  flex-wrap: wrap;
 `;
 
 const Sort = styled.div`
@@ -29,7 +29,6 @@ const Sort = styled.div`
 `;
 
 const Select = styled.select`
-  // appearance: none;
   background: lightGray;
   background-image: none;
   padding: 5px 10px 5px 10px;
@@ -276,7 +275,7 @@ const App = () => {
   let signOut = null;
   if (isSignedIn) {
     addMovie = (
-      <div>
+      <div style={{ flex: "1 1 30%" }}>
         <AddMovie
           handleAddMovieCallback={handleAddMovie}
           alreadyAdded={alreadyAdded}
@@ -301,7 +300,7 @@ const App = () => {
       </div>
       <Main>
         {addMovie}
-        <div>
+        <div style={{ flex: "1 1 70%" }}>
           <Sort>
             <h4>Sort by:</h4>
             <Select onChange={e => setSortSelected(e.target.value)}>

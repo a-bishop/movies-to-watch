@@ -43,7 +43,7 @@ const Movie = ({
   }
   return (
     <div className={className}>
-      <div>
+      <div style={{ flex: "1 1 55%" }}>
         {deleteButton}
         <Title>{title}</Title>
         <ul>
@@ -61,8 +61,8 @@ const Movie = ({
           </div>
         ))}
       </div>
-      <div>
-        <Poster alt={title} src={poster} width="200" />
+      <div style={{ flexBasis: "1 1 45%" }}>
+        <Poster alt={title} src={poster} width="180" />
       </div>
     </div>
   );
@@ -75,4 +75,5 @@ export default styled(Movie)`
   margin: 1rem;
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
 `;
