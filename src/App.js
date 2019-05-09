@@ -22,6 +22,7 @@ const Main = styled.div`
 
 const Sort = styled.div`
   margin-left: 20px;
+  // margin-bottom: 0px;
   width: 200px;
   display: flex;
   align-items: center;
@@ -275,7 +276,7 @@ const App = () => {
   let signOut = null;
   if (isSignedIn) {
     addMovie = (
-      <div style={{ flex: "1 1 30%" }}>
+      <div>
         <AddMovie
           handleAddMovieCallback={handleAddMovie}
           alreadyAdded={alreadyAdded}

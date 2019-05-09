@@ -5,6 +5,13 @@
   min-width: 500px;
 }
 
+@media only screen and (max-width: 500px) {
+  .App {
+    width: 100%;
+    min-width: 350px;
+  }
+}
+
 .title {
   margin-left: 1rem;
   margin-bottom: 5px;
