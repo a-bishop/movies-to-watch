@@ -59,13 +59,12 @@ const App = () => {
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState("");
-  const [movieDeleted, setMovieDeleted] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [movieToDelete, setMovieToDelete] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
   const [sortSelected, setSortSelected] = React.useState("");
-
-  console.log(window.innerWidth);
 
   firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
@@ -79,39 +78,62 @@ const App = () => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 1500);
     let data = [];
     let titles = [];
-    db.collection("movies")
-      .orderBy("created", "desc")
-      .get()
-      .then(function(querySnapshot) {
-        querySnapshot.forEach(function(doc) {
-          data.push(doc.data());
-          titles.push(doc.data().title);
+    async function getMovies() {
+      await db
+        .collection("movies")
+        .orderBy("created", "desc")
+        .get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            const docData = doc.data();
+            const id = doc.id;
+            const allData = { ...docData, id };
+            data.push(allData);
+            titles.push(doc.data().title);
+          });
         });
-      });
-    setMovieData(data);
-    setTitles(titles);
-    setTimeout(() => setIsLoading(false), 1500);
+      await setMovieData(data);
+      await setTitles(titles);
+    }
+    getMovies().catch(error => console.log(error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (newMovieAdded !== "") {
+      const {
+        title,
+        year,
+        genre,
+        director,
+        actors,
+        plot,
+        ratings,
+        poster,
+        created
+      } = newMovieAdded;
       db.collection("movies")
-        .doc(newMovieAdded.title)
-        .set({
-          title: newMovieAdded.title,
-          year: newMovieAdded.year,
-          genre: newMovieAdded.genre,
-          director: newMovieAdded.director,
-          actors: newMovieAdded.actors,
-          plot: newMovieAdded.plot,
-          ratings: newMovieAdded.ratings,
-          poster: newMovieAdded.poster,
-          created: newMovieAdded.created
+        .add({
+          title,
+          year,
+          genre,
+          director,
+          actors,
+          plot,
+          ratings,
+          poster,
+          created
         })
         .then(function(docRef) {
-          console.log("Document written with ID: ", docRef.id);
+          console.log("Document written!", docRef.id);
+          newMovieAdded.id = docRef.id;
+          setMovieData(movieData => [newMovieAdded, ...movieData]);
+          setActionMessage("Movie Added!");
+          setTimeout(() => setActionMessage(""), 1500);
         })
         .catch(function(error) {
           console.error("Error adding document: ", error);
@@ -120,18 +142,36 @@ const App = () => {
   }, [newMovieAdded]);
 
   useEffect(() => {
-    if (movieDeleted !== "") {
+    if (movieToDelete !== "") {
+      console.log(movieToDelete);
       db.collection("movies")
-        .doc(movieDeleted)
+        .doc(movieToDelete.id)
         .delete()
         .then(function() {
+          handleDeleteMovie(movieToDelete);
+          setActionMessage("Movie successfully deleted!");
+          setTimeout(() => setActionMessage(""), 1500);
           console.log("Movie successfully deleted!");
         })
         .catch(function(error) {
           console.error("Error removing movie: ", error);
         });
     }
-  }, [movieDeleted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movieToDelete]);
+
+  function handleTryDeleteMovie(movie) {
+    setMovieToDelete(movie);
+  }
+
+  function handleDeleteMovie(movie) {
+    const updatedMovies = movieData.filter(
+      eachMovie => eachMovie.id !== movie.id
+    );
+    const updatedTitles = titles.filter(eachTitle => eachTitle !== movie.title);
+    setTitles(updatedTitles);
+    setMovieData(updatedMovies);
+  }
 
   function handleAddMovie(movie) {
     setAlreadyAdded(false);
@@ -156,9 +196,8 @@ const App = () => {
               poster: json.Poster,
               created: firebase.firestore.Timestamp.now()
             };
-            setTitles([newMovie.title, ...titles]);
+            setTitles(titles => [newMovie.title, ...titles]);
             setNewMovieAdded(newMovie);
-            setMovieData([newMovie, ...movieData]);
           } else {
             setNotFound(true);
             setTimeout(() => setNotFound(false), 2500);
@@ -173,16 +212,6 @@ const App = () => {
       setAlreadyAdded(true);
       setTimeout(() => setAlreadyAdded(false), 2500);
     }
-  }
-
-  function handleDeleteMovie(title) {
-    const updatedMovies = movieData.filter(
-      eachMovie => eachMovie.title !== title
-    );
-    const updatedTitles = titles.filter(eachTitle => eachTitle !== title);
-    setTitles(updatedTitles);
-    setMovieData(updatedMovies);
-    setMovieDeleted(title);
   }
 
   function capitalize(string) {
@@ -236,8 +265,6 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortSelected]);
 
-  useEffect(() => {}, [movieData]);
-
   let main = (
     <div style={{ padding: "50px 0 0 50px" }}>
       <SyncLoader sizeUnit={"px"} size={40} color={"darkKhaki"} />
@@ -248,8 +275,7 @@ const App = () => {
       <div>
         {movieData.map((movie, i) => (
           <Movie
-            index={i}
-            key={movie.title}
+            key={movie.id}
             title={movie.title}
             year={movie.year}
             genre={movie.genre}
@@ -258,13 +284,16 @@ const App = () => {
             plot={movie.plot}
             ratings={movie.ratings}
             poster={movie.poster}
-            handleDeleteMovieCallback={handleDeleteMovie}
+            id={movie.id}
+            handleDeleteMovieCallback={handleTryDeleteMovie}
             isSignedIn={isSignedIn}
           />
         ))}
       </div>
     );
   }
+
+  let message = <p style={{ margin: "0 0 0 20px" }}>{actionMessage}</p>;
 
   let addMovie = (
     <div>
@@ -310,6 +339,7 @@ const App = () => {
               <option value="title">Title</option>
             </Select>
           </Sort>
+          {message}
           {main}
         </div>
       </Main>

@@ -30,13 +30,14 @@ const Movie = ({
   plot,
   ratings,
   poster,
+  id,
   handleDeleteMovieCallback,
   isSignedIn
 }) => {
   let deleteButton = null;
   if (isSignedIn) {
     deleteButton = (
-      <Delete onClick={() => handleDeleteMovieCallback(title)}>
+      <Delete onClick={() => handleDeleteMovieCallback({title, id})}>
         Delete Movie
       </Delete>
     );
