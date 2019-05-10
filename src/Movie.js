@@ -2,10 +2,6 @@
 import React from "react";
 import styled from "styled-components";
 
-const Poster = styled.img`
-  margin-left: 20px;
-`;
-
 const Title = styled.h3`
   margin: 0;
 `;
@@ -29,15 +25,17 @@ const Movie = ({
   actors,
   plot,
   ratings,
+  avgRating,
   poster,
   id,
-  handleDeleteMovieCallback,
+  onDeleteMovieCallback,
   isSignedIn
 }) => {
   let deleteButton = null;
+
   if (isSignedIn) {
     deleteButton = (
-      <Delete onClick={() => handleDeleteMovieCallback({title, id})}>
+      <Delete onClick={() => onDeleteMovieCallback({ title, id })}>
         Delete Movie
       </Delete>
     );
@@ -62,8 +60,8 @@ const Movie = ({
           </div>
         ))}
       </div>
-      <div style={{ flexBasis: "1 1 45%" }}>
-        <Poster alt={title} src={poster} width="180" />
+      <div style={{ flexBasis: "1 1 45%", padding: "0 10px 0 10px" }}>
+        <img alt={title} src={poster} width="180" />
       </div>
     </div>
   );
@@ -75,6 +73,6 @@ export default styled(Movie)`
   background: papayawhip;
   margin: 1rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   flex-wrap: wrap;
 `;

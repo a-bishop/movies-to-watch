@@ -6,10 +6,10 @@ import SignIn from "./SignIn";
 import config from "./config";
 import { SyncLoader } from "react-spinners";
 import styled from "styled-components";
+import firebase from "firebase/app";
+import "firebase/firestore";
+import "firebase/auth";
 
-const firebase = require("firebase");
-// Required for side-effects
-require("firebase/firestore");
 const FIREBASE = config.FIREBASE;
 firebase.initializeApp(FIREBASE);
 const db = firebase.firestore();
@@ -22,8 +22,7 @@ const Main = styled.div`
 
 const Sort = styled.div`
   margin-left: 20px;
-  // margin-bottom: 0px;
-  width: 200px;
+  width: 260px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -39,6 +38,7 @@ const Select = styled.select`
   cursor: pointer;
   border: 1px solid black;
   border-radius: 5px;
+  flex-basis: 65%;
 `;
 
 const SignOut = styled.button`
@@ -91,7 +91,8 @@ const App = () => {
           querySnapshot.forEach(doc => {
             const docData = doc.data();
             const id = doc.id;
-            const allData = { ...docData, id };
+            const avgRating = getAvgRatings(docData.ratings);
+            const allData = { ...docData, id, avgRating };
             data.push(allData);
             titles.push(doc.data().title);
           });
@@ -102,6 +103,20 @@ const App = () => {
     getMovies().catch(error => console.log(error));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const getAvgRatings = ratings => {
+    let ratingTotal = 0;
+    let numRatings = ratings.length;
+    for (const rating of ratings) {
+      let doubleVal = parseFloat(rating.Value);
+      if (doubleVal <= 10) {
+        doubleVal *= 10;
+      }
+      ratingTotal += doubleVal;
+    }
+    let avgRating = (ratingTotal / numRatings).toFixed(2);
+    return avgRating;
+  };
 
   useEffect(() => {
     if (newMovieAdded !== "") {
@@ -131,6 +146,7 @@ const App = () => {
         .then(function(docRef) {
           console.log("Document written!", docRef.id);
           newMovieAdded.id = docRef.id;
+          newMovieAdded.avgRating = getAvgRatings(newMovieAdded.ratings);
           setMovieData(movieData => [newMovieAdded, ...movieData]);
           setActionMessage("Movie Added!");
           setTimeout(() => setActionMessage(""), 1500);
@@ -154,7 +170,8 @@ const App = () => {
           console.log("Movie successfully deleted!");
         })
         .catch(function(error) {
-          console.error("Error removing movie: ", error);
+          setActionMessage("Error removing movie: ", error);
+          setTimeout(() => setActionMessage(""), 1500);
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -259,6 +276,12 @@ const App = () => {
         newData.sort((a, b) => (a.title > b.title ? 1 : -1));
         setMovieData(newData);
         break;
+      case "avgRating":
+        newData.sort((a, b) =>
+          parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1
+        );
+        setMovieData(newData);
+        break;
       default:
         break;
     }
@@ -273,22 +296,25 @@ const App = () => {
   if (!isLoading) {
     main = (
       <div>
-        {movieData.map((movie, i) => (
-          <Movie
-            key={movie.id}
-            title={movie.title}
-            year={movie.year}
-            genre={movie.genre}
-            director={movie.director}
-            actors={movie.actors}
-            plot={movie.plot}
-            ratings={movie.ratings}
-            poster={movie.poster}
-            id={movie.id}
-            handleDeleteMovieCallback={handleTryDeleteMovie}
-            isSignedIn={isSignedIn}
-          />
-        ))}
+        {movieData.map((movie, i) => {
+          return (
+            <Movie
+              key={movie.id}
+              title={movie.title}
+              year={movie.year}
+              genre={movie.genre}
+              director={movie.director}
+              actors={movie.actors}
+              plot={movie.plot}
+              ratings={movie.ratings}
+              poster={movie.poster}
+              id={movie.id}
+              avgRating={movie.avgRating}
+              onDeleteMovieCallback={handleTryDeleteMovie}
+              isSignedIn={isSignedIn}
+            />
+          );
+        })}
       </div>
     );
   }
@@ -334,7 +360,8 @@ const App = () => {
           <Sort>
             <h4>Sort by:</h4>
             <Select onChange={e => setSortSelected(e.target.value)}>
-              <option value="dateAdded">Date Added</option>
+              <option value="dateAdded">Recently Added</option>
+              <option value="avgRating"> Average Rating</option>
               <option value="releaseYear">Release Year</option>
               <option value="title">Title</option>
             </Select>
