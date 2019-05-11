@@ -190,14 +190,14 @@ const App = () => {
     setMovieData(updatedMovies);
   }
 
-  function handleAddMovie(movie) {
+  function handleAddMovie([movie, year]) {
     setAlreadyAdded(false);
     setNotFound(false);
     movie = movie.trim();
     const movieCapitalized = capitalize(movie);
     const movieSearchString = movie.replace(" ", "+");
     if (!titles.includes(movieCapitalized)) {
-      const url = `https://www.omdbapi.com/?t=${movieSearchString}&plot=full&apikey=${API_KEY}`;
+      const url = `https://www.omdbapi.com/?t=${movieSearchString}&y=${year}&plot=full&apikey=${API_KEY}`;
       fetch(url)
         .then(res => res.json())
         .then(json => {

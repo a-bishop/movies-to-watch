@@ -52,13 +52,24 @@ const Movie = ({
           <li>Starring {actors}</li>
         </ul>
         <section>{plot}</section>
-        {ratings.map(rating => (
-          <div key={rating.Source}>
-            <p>
-              {rating.Source} – {rating.Value}
-            </p>
-          </div>
-        ))}
+        <p
+          style={{
+            fontStyle: "italic",
+            fontSize: "0.9em",
+            width: "200px"
+          }}
+        >
+          {ratings.map(rating => {
+            if (rating.Source === "Internet Movie Database") {
+              rating.Source = "IMDb";
+            }
+            return (
+              <div key={rating.Source}>
+                {rating.Source} – {rating.Value}
+              </div>
+            );
+          })}
+        </p>
       </div>
       <div style={{ flexBasis: "1 1 45%", padding: "0 10px 0 10px" }}>
         <img alt={title} src={poster} width="180" />
