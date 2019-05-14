@@ -20,6 +20,11 @@ const Main = styled.div`
   flex-wrap: wrap;
 `;
 
+const Title = styled.h2`
+  margin-left: 1rem;
+  margin-bottom: 5px;
+`;
+
 const Sort = styled.div`
   margin-left: 20px;
   width: 260px;
@@ -344,6 +349,15 @@ const App = () => {
 
   return (
     <div className="App">
+      {/* <style
+        contentEditable
+        style={{ display: "block" }}
+        dangerouslySetInnerHTML={{
+          __html: `
+          .Submit { margin-top: 1.5em; } 
+    `
+        }}
+      /> */}
       <div
         style={{
           display: "flex",
@@ -351,7 +365,7 @@ const App = () => {
           justifyContent: "flex-start"
         }}
       >
-        <h2 className="title">Movies to watch!</h2>
+        <Title>Movies to watch!</Title>
         {signOut}
       </div>
       <Main>
@@ -361,9 +375,9 @@ const App = () => {
             <h4>Sort by:</h4>
             <Select onChange={e => setSortSelected(e.target.value)}>
               <option value="dateAdded">Recently Added</option>
-              <option value="avgRating"> Average Rating</option>
+              <option value="avgRating">Top Rated</option>
               <option value="releaseYear">Release Year</option>
-              <option value="title">Title</option>
+              <option value="title">Titles A-Z</option>
             </Select>
           </Sort>
           {message}

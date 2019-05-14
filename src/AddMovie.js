@@ -74,7 +74,7 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
   }
 
   return (
-    <Container>
+    <Container className="Container">
       <Form onSubmit={handleSubmit}>
         <label htmlFor="addMovie">Add Movie:</label>
         <TextInput
