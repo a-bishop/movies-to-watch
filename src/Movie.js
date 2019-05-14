@@ -40,6 +40,26 @@ const Movie = ({
       </Delete>
     );
   }
+  let genreDisplay = null;
+  if (genre !== "N/A") {
+    genreDisplay = <li>{genre}</li>;
+  }
+  let directorDisplay = null;
+  if (director !== "N/A") {
+    directorDisplay = <li>Directed by {director}</li>;
+  }
+  let actorsDisplay = null;
+  if (actors !== "N/A") {
+    actorsDisplay = <li>Starring {actors}</li>;
+  }
+  let posterImg = null;
+  if (poster !== "N/A") {
+    posterImg = (
+      <div style={{ flexBasis: "1 1 45%", padding: "0 10px 0 10px" }}>
+        <img alt={title} src={poster} width="180" />
+      </div>
+    );
+  }
   return (
     <div className={className}>
       <div style={{ flex: "1 1 55%" }}>
@@ -47,16 +67,17 @@ const Movie = ({
         <Title>{title}</Title>
         <ul>
           <li>{year}</li>
-          <li>{genre}</li>
-          <li>Directed by {director}</li>
-          <li>Starring {actors}</li>
+          {genreDisplay}
+          {directorDisplay}
+          {actorsDisplay}
         </ul>
         <section>{plot}</section>
-        <p
+        <div
           style={{
             fontStyle: "italic",
             fontSize: "0.9em",
-            width: "200px"
+            width: "200px",
+            marginTop: "1em"
           }}
         >
           {ratings.map(rating => {
@@ -69,11 +90,9 @@ const Movie = ({
               </div>
             );
           })}
-        </p>
+        </div>
       </div>
-      <div style={{ flexBasis: "1 1 45%", padding: "0 10px 0 10px" }}>
-        <img alt={title} src={poster} width="180" />
-      </div>
+      {posterImg}
     </div>
   );
 };
