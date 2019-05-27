@@ -27,10 +27,11 @@ const Title = styled.h2`
 
 const Sort = styled.div`
   margin-left: 20px;
-  width: 260px;
+  margin-top: 20px;
+  width: 300px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  height: 35px;
 `;
 
 const Select = styled.select`
@@ -69,9 +70,11 @@ const App = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
-  const [sortSelected, setSortSelected] = React.useState("");
+  const [sortSelected, setSortSelected] = useState("");
+  const [currUser, setCurrUser] = useState(null);
+  const [filterSelected, setFilterSelected] = useState("");
 
-  firebase.auth().onAuthStateChanged(function(user) {
+  firebase.auth().onAuthStateChanged(user => {
     if (user) {
       // User is signed in.
       setIsSignedIn(true);
@@ -81,10 +84,8 @@ const App = () => {
     }
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
     let data = [];
     let titles = [];
     async function getMovies() {
@@ -102,11 +103,11 @@ const App = () => {
             titles.push(doc.data().title);
           });
         });
-      await setMovieData(data);
-      await setTitles(titles);
+      setMovieData(data);
+      setTitles(titles);
+      setIsLoading(false);
     }
     getMovies().catch(error => console.log(error));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getAvgRatings = ratings => {
@@ -124,7 +125,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (newMovieAdded !== "") {
+    if (newMovieAdded !== "" && currUser !== null) {
       const {
         title,
         year,
@@ -134,7 +135,8 @@ const App = () => {
         plot,
         ratings,
         poster,
-        created
+        created,
+        creator
       } = newMovieAdded;
       db.collection("movies")
         .add({
@@ -146,21 +148,27 @@ const App = () => {
           plot,
           ratings,
           poster,
-          created
+          created,
+          creator
         })
-        .then(function(docRef) {
+        .then(docRef => {
           console.log("Document written!", docRef.id);
+          // add the id and avg rating to the movie object client-side
           newMovieAdded.id = docRef.id;
           newMovieAdded.avgRating = getAvgRatings(newMovieAdded.ratings);
           setMovieData(movieData => [newMovieAdded, ...movieData]);
           setActionMessage("Movie Added!");
           setTimeout(() => setActionMessage(""), 1500);
         })
-        .catch(function(error) {
+        .catch(error => {
           console.error("Error adding document: ", error);
         });
     }
-  }, [newMovieAdded]);
+  }, [newMovieAdded, currUser]);
+
+  function handleTryDeleteMovie(movie) {
+    setMovieToDelete(movie);
+  }
 
   useEffect(() => {
     if (movieToDelete !== "") {
@@ -179,21 +187,18 @@ const App = () => {
           setTimeout(() => setActionMessage(""), 1500);
         });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [movieToDelete]);
-
-  function handleTryDeleteMovie(movie) {
-    setMovieToDelete(movie);
-  }
-
-  function handleDeleteMovie(movie) {
-    const updatedMovies = movieData.filter(
-      eachMovie => eachMovie.id !== movie.id
-    );
-    const updatedTitles = titles.filter(eachTitle => eachTitle !== movie.title);
-    setTitles(updatedTitles);
-    setMovieData(updatedMovies);
-  }
+    function handleDeleteMovie(movie) {
+      const updatedMovies = movieData.filter(
+        eachMovie => eachMovie.id !== movie.id
+      );
+      const updatedTitles = titles.filter(
+        eachTitle => eachTitle !== movie.title
+      );
+      setTitles(updatedTitles);
+      setMovieData(updatedMovies);
+      setMovieToDelete("");
+    }
+  }, [movieData, movieToDelete, titles]);
 
   function handleAddMovie([movie, year]) {
     setAlreadyAdded(false);
@@ -216,7 +221,8 @@ const App = () => {
               plot: json.Plot,
               ratings: json.Ratings,
               poster: json.Poster,
-              created: firebase.firestore.Timestamp.now()
+              created: firebase.firestore.Timestamp.now(),
+              creator: currUser
             };
             setTitles(titles => [newMovie.title, ...titles]);
             setNewMovieAdded(newMovie);
@@ -240,8 +246,32 @@ const App = () => {
     return string.replace(/\b\w/g, l => l.toUpperCase());
   }
 
-  function handleSignOut() {
-    firebase
+  async function handleSignIn(email, password) {
+    await firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .catch(function(error) {
+        // Handle Errors here.
+        console.log(error.code);
+        setSignInError("There was an error with these credentials");
+        setTimeout(() => setSignInError(""), 2500);
+      });
+    const user = firebase.auth().currentUser;
+    setCurrUser(user.displayName);
+    // user
+    //   .updateProfile({
+    //     displayName: "Travis"
+    //   })
+    //   .then(function() {
+    //     console.log("success");
+    //   })
+    //   .catch(function(error) {
+    //     console.log(error);
+    //   });
+  }
+
+  async function handleSignOut() {
+    await firebase
       .auth()
       .signOut()
       .then(function() {
@@ -252,18 +282,7 @@ const App = () => {
         // An error happened.
         console.log(error);
       });
-  }
-
-  function handleSignIn(email, password) {
-    firebase
-      .auth()
-      .signInWithEmailAndPassword(email, password)
-      .catch(function(error) {
-        // Handle Errors here.
-        console.log(error.code);
-        setSignInError("There was an error with these credentials");
-        setTimeout(() => setSignInError(""), 2500);
-      });
+    setCurrUser(null);
   }
 
   useEffect(() => {
@@ -290,12 +309,12 @@ const App = () => {
       default:
         break;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortSelected]);
+    setSortSelected("");
+  }, [movieData, sortSelected]);
 
   let main = (
     <div style={{ padding: "50px 0 0 50px" }}>
-      <SyncLoader sizeUnit={"px"} size={40} color={"darkKhaki"} />
+      <SyncLoader sizeUnit={"px"} size={30} color={"darkKhaki"} />
     </div>
   );
   if (!isLoading) {
@@ -315,6 +334,8 @@ const App = () => {
               poster={movie.poster}
               id={movie.id}
               avgRating={movie.avgRating}
+              creator={movie.creator}
+              filter={filterSelected}
               onDeleteMovieCallback={handleTryDeleteMovie}
               isSignedIn={isSignedIn}
             />
@@ -346,18 +367,17 @@ const App = () => {
     );
     signOut = <SignOut onClick={handleSignOut}>Sign Out</SignOut>;
   }
+  let displayUser = null;
+  if (currUser !== null) {
+    displayUser = (
+      <span style={{ fontSize: ".7em", fontWeight: "normal" }}>
+        &nbsp;Hello, {currUser}
+      </span>
+    );
+  }
 
   return (
     <div className="App">
-      {/* <style
-        contentEditable
-        style={{ display: "block" }}
-        dangerouslySetInnerHTML={{
-          __html: `
-          .Submit { margin-top: 1.5em; } 
-    `
-        }}
-      /> */}
       <div
         style={{
           display: "flex",
@@ -365,21 +385,38 @@ const App = () => {
           justifyContent: "flex-start"
         }}
       >
-        <Title>Movies to watch!</Title>
+        <Title>Movies to watch! {displayUser}</Title>
         {signOut}
       </div>
       <Main>
         {addMovie}
         <div style={{ flex: "1 1 70%" }}>
-          <Sort>
-            <h4>Sort by:</h4>
-            <Select onChange={e => setSortSelected(e.target.value)}>
-              <option value="dateAdded">Recently Added</option>
-              <option value="avgRating">Top Rated</option>
-              <option value="releaseYear">Release Year</option>
-              <option value="title">Titles A-Z</option>
-            </Select>
-          </Sort>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              marginBottom: "30px"
+            }}
+          >
+            <Sort>
+              <h4 style={{ width: "90px" }}>Editors' Picks:</h4>
+              <Select onChange={e => setFilterSelected(e.target.value)}>
+                <option value="">All Editors</option>
+                <option value="Andrew">Andrew</option>
+                <option value="Travis">Travis</option>
+                {/* <option value="Tom">Tom</option> */}
+              </Select>
+            </Sort>
+            <Sort>
+              <h4 style={{ width: "90px" }}>Sort by:</h4>
+              <Select onChange={e => setSortSelected(e.target.value)}>
+                <option value="dateAdded">Recently Added</option>
+                <option value="avgRating">Top Rated</option>
+                <option value="releaseYear">Release Year</option>
+                <option value="title">Titles A-Z</option>
+              </Select>
+            </Sort>
+          </div>
           {message}
           {main}
         </div>

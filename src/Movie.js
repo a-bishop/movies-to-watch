@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-expressions */
 import React from "react";
 import styled from "styled-components";
+import checkmark from "./assets/checkmark.png";
 
 const Title = styled.h3`
   margin: 0;
@@ -25,13 +26,19 @@ const Movie = ({
   actors,
   plot,
   ratings,
-  avgRating,
+  creator,
+  // avgRating,
   poster,
+  filter,
   id,
   onDeleteMovieCallback,
   isSignedIn
 }) => {
   let deleteButton = null;
+
+  if (filter !== "" && creator !== filter) {
+    return null;
+  }
 
   if (isSignedIn) {
     deleteButton = (
@@ -77,7 +84,8 @@ const Movie = ({
             fontStyle: "italic",
             fontSize: "0.9em",
             width: "200px",
-            marginTop: "1em"
+            marginTop: "1em",
+            marginBottom: "1em"
           }}
         >
           {ratings.map(rating => {
@@ -90,6 +98,18 @@ const Movie = ({
               </div>
             );
           })}
+          <br />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontStyle: "normal",
+              fontSize: "0.9em"
+            }}
+          >
+            <img alt="checkmark" src={checkmark} style={{ width: "20px" }} />
+            &nbsp;Recommended by {creator}
+          </div>
         </div>
       </div>
       {posterImg}
