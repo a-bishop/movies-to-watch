@@ -260,7 +260,7 @@ const App = () => {
     setCurrUser(user.displayName);
     // user
     //   .updateProfile({
-    //     displayName: "Travis"
+    //     displayName: "Tom"
     //   })
     //   .then(function() {
     //     console.log("success");
@@ -404,7 +404,7 @@ const App = () => {
                 <option value="">All Editors</option>
                 <option value="Andrew">Andrew</option>
                 <option value="Travis">Travis</option>
-                {/* <option value="Tom">Tom</option> */}
+                <option value="Tom">Tom</option>
               </Select>
             </Sort>
             <Sort>
