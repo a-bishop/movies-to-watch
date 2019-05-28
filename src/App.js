@@ -28,17 +28,17 @@ const Title = styled.h2`
 const Sort = styled.div`
   margin-left: 20px;
   margin-top: 20px;
+  padding-top: 0
   width: 300px;
   display: flex;
   align-items: center;
-  height: 35px;
 `;
 
 const Select = styled.select`
   background: lightGray;
   background-image: none;
   padding: 5px 10px 5px 10px;
-  height: 100%;
+  margin: 0;
   font-family: Futura;
   font-size: 1em;
   cursor: pointer;
@@ -394,21 +394,20 @@ const App = () => {
           <div
             style={{
               display: "flex",
-              flexWrap: "wrap",
-              marginBottom: "30px"
+              flexWrap: "wrap"
             }}
           >
             <Sort>
-              <h4 style={{ width: "90px" }}>Editors' Picks:</h4>
+              <h4 style={{ width: "90px", margin: "0" }}>Editors' Picks:</h4>
               <Select onChange={e => setFilterSelected(e.target.value)}>
-                <option value="">All Editors</option>
+                <option value="">All</option>
                 <option value="Andrew">Andrew</option>
                 <option value="Travis">Travis</option>
                 <option value="Tom">Tom</option>
               </Select>
             </Sort>
             <Sort>
-              <h4 style={{ width: "90px" }}>Sort by:</h4>
+              <h4 style={{ width: "90px", margin: "0" }}>Sort by:</h4>
               <Select onChange={e => setSortSelected(e.target.value)}>
                 <option value="dateAdded">Recently Added</option>
                 <option value="avgRating">Top Rated</option>
