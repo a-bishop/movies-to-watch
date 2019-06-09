@@ -5,10 +5,12 @@
   "dependencies": {
     "firebase": "^5.11.1",
     "react": "^16.8.6",
+    "react-beautiful-dnd": "^11.0.3",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.0",
     "react-select": "^2.4.3",
     "react-spinners": "^0.5.4",
+    "react-with-gesture": "^4.0.8",
     "styled-components": "^4.2.0"
   },
   "scripts": {

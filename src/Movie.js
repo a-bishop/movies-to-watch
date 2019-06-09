@@ -28,7 +28,6 @@ const Movie = ({
   ratings,
   creator,
   currUser,
-  // avgRating,
   poster,
   filter,
   id,
@@ -121,7 +120,7 @@ const Movie = ({
 export default styled(Movie)`
   border: 2px solid black;
   padding: 2rem;
-  background: papayawhip;
+  background: ${props => (props.isDragging ? "#e5d7bf" : "papayawhip")};
   margin: 1rem;
   display: flex;
   justify-content: center;

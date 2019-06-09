@@ -6,6 +6,8 @@ import SignIn from "./SignIn";
 import config from "./config";
 import { SyncLoader } from "react-spinners";
 import styled from "styled-components";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
 import firebase from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
@@ -71,8 +73,12 @@ const App = () => {
   const [signInError, setSignInError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [sortSelected, setSortSelected] = useState("");
-  const [currUser, setCurrUser] = useState(null);
+  const [currUser, setCurrUser] = useState(firebase.auth().currentUser);
   const [filterSelected, setFilterSelected] = useState("");
+
+  // makes items draggable
+  // const [bind, { local }] = useGesture();
+  // const [x, y] = local;
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -312,6 +318,25 @@ const App = () => {
     setSortSelected("");
   }, [movieData, sortSelected]);
 
+  const onDragEnd = result => {
+    const { destination, source, draggableId } = result;
+    if (!destination) {
+      return;
+    }
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+    let newData = [...movieData];
+    const movieToMove = newData.filter(movie => movie.id === draggableId)[0];
+    console.log("to move", movieToMove);
+    newData.splice(source.index, 1);
+    newData.splice(destination.index, 0, movieToMove);
+    setMovieData(newData);
+  };
+
   let main = (
     <div style={{ padding: "50px 0 0 50px" }}>
       <SyncLoader sizeUnit={"px"} size={30} color={"darkKhaki"} />
@@ -319,30 +344,48 @@ const App = () => {
   );
   if (!isLoading) {
     main = (
-      <div>
-        {movieData.map((movie, i) => {
-          return (
-            <Movie
-              key={movie.id}
-              title={movie.title}
-              year={movie.year}
-              genre={movie.genre}
-              director={movie.director}
-              actors={movie.actors}
-              plot={movie.plot}
-              ratings={movie.ratings}
-              poster={movie.poster}
-              id={movie.id}
-              avgRating={movie.avgRating}
-              creator={movie.creator}
-              currUser={currUser}
-              filter={filterSelected}
-              onDeleteMovieCallback={handleTryDeleteMovie}
-              isSignedIn={isSignedIn}
-            />
-          );
-        })}
-      </div>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId={movieData.keys()}>
+          {provided => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              {movieData.map((movie, i) => {
+                return (
+                  <Draggable draggableId={movie.id} key={movie.id} index={i}>
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        ref={provided.innerRef}
+                      >
+                        <Movie
+                          key={movie.id}
+                          title={movie.title}
+                          year={movie.year}
+                          genre={movie.genre}
+                          director={movie.director}
+                          actors={movie.actors}
+                          plot={movie.plot}
+                          ratings={movie.ratings}
+                          poster={movie.poster}
+                          id={movie.id}
+                          avgRating={movie.avgRating}
+                          creator={movie.creator}
+                          currUser={currUser}
+                          filter={filterSelected}
+                          onDeleteMovieCallback={handleTryDeleteMovie}
+                          isSignedIn={isSignedIn}
+                          isDragging={snapshot.isDragging}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                );
+              })}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     );
   }
 
