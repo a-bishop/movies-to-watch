@@ -27,6 +27,7 @@ const Movie = ({
   plot,
   ratings,
   creator,
+  currUser,
   // avgRating,
   poster,
   filter,
@@ -40,7 +41,7 @@ const Movie = ({
     return null;
   }
 
-  if (isSignedIn) {
+  if (isSignedIn && (currUser === "Andrew" || currUser === creator)) {
     deleteButton = (
       <Delete onClick={() => onDeleteMovieCallback({ title, id })}>
         Delete Movie

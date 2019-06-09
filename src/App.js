@@ -335,6 +335,7 @@ const App = () => {
               id={movie.id}
               avgRating={movie.avgRating}
               creator={movie.creator}
+              currUser={currUser}
               filter={filterSelected}
               onDeleteMovieCallback={handleTryDeleteMovie}
               isSignedIn={isSignedIn}
@@ -403,7 +404,6 @@ const App = () => {
                 <option value="">All</option>
                 <option value="Andrew">Andrew</option>
                 <option value="Travis">Travis</option>
-                <option value="Tom">Tom</option>
               </Select>
             </Sort>
             <Sort>
