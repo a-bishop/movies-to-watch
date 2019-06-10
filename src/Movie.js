@@ -120,7 +120,7 @@ const Movie = ({
 export default styled(Movie)`
   border: 2px solid black;
   padding: 2rem;
-  background: ${props => (props.isDragging ? "#e5d7bf" : "papayawhip")};
+  background: papayawhip;
   margin: 1rem;
   display: flex;
   justify-content: center;

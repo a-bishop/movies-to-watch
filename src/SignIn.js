@@ -31,7 +31,7 @@ const Error = styled.p`
 const Form = styled.form`
   border: 2px solid black;
   padding: 2em 2em 1em 2em;
-  margin: 1em 0 1em 1em;
+  margin: 0 0 1em 1em;
   background: lavender;
   width: 165px;
 `;
@@ -39,7 +39,7 @@ const Form = styled.form`
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  max-width: 250px;
+  width: 250px;
 `;
 
 const SignIn = ({ handleSignInCallback, signInError }) => {

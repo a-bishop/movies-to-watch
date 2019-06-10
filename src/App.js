@@ -6,7 +6,6 @@ import SignIn from "./SignIn";
 import config from "./config";
 import { SyncLoader } from "react-spinners";
 import styled from "styled-components";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -24,12 +23,13 @@ const Main = styled.div`
 
 const Title = styled.h2`
   margin-left: 1rem;
-  margin-bottom: 5px;
+  margin-bottom: 20px;
 `;
 
 const Sort = styled.div`
   margin-left: 20px;
-  margin-top: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   padding-top: 0
   width: 300px;
   display: flex;
@@ -62,6 +62,11 @@ const SignOut = styled.button`
 `;
 
 const App = () => {
+  let name = null;
+  if (firebase.auth().currentUser !== null) {
+    name = firebase.auth().currentUser.displayName;
+  }
+
   const [titles, setTitles] = useState([]);
   const [movieData, setMovieData] = useState([]);
   const [notFound, setNotFound] = useState(false);
@@ -73,20 +78,18 @@ const App = () => {
   const [signInError, setSignInError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
   const [sortSelected, setSortSelected] = useState("");
-  const [currUser, setCurrUser] = useState(firebase.auth().currentUser);
+  const [currUser, setCurrUser] = useState(name);
   const [filterSelected, setFilterSelected] = useState("");
-
-  // makes items draggable
-  // const [bind, { local }] = useGesture();
-  // const [x, y] = local;
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
       // User is signed in.
       setIsSignedIn(true);
+      setCurrUser(firebase.auth().currentUser.displayName);
     } else {
       // No user is signed in.
       setIsSignedIn(false);
+      setCurrUser(null);
     }
   });
 
@@ -318,75 +321,34 @@ const App = () => {
     setSortSelected("");
   }, [movieData, sortSelected]);
 
-  const onDragEnd = result => {
-    const { destination, source, draggableId } = result;
-    if (!destination) {
-      return;
-    }
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
-    let newData = [...movieData];
-    const movieToMove = newData.filter(movie => movie.id === draggableId)[0];
-    console.log("to move", movieToMove);
-    newData.splice(source.index, 1);
-    newData.splice(destination.index, 0, movieToMove);
-    setMovieData(newData);
-  };
-
   let main = (
     <div style={{ padding: "50px 0 0 50px" }}>
       <SyncLoader sizeUnit={"px"} size={30} color={"darkKhaki"} />
     </div>
   );
   if (!isLoading) {
-    main = (
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId={movieData.keys()}>
-          {provided => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              {movieData.map((movie, i) => {
-                return (
-                  <Draggable draggableId={movie.id} key={movie.id} index={i}>
-                    {(provided, snapshot) => (
-                      <div
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        ref={provided.innerRef}
-                      >
-                        <Movie
-                          key={movie.id}
-                          title={movie.title}
-                          year={movie.year}
-                          genre={movie.genre}
-                          director={movie.director}
-                          actors={movie.actors}
-                          plot={movie.plot}
-                          ratings={movie.ratings}
-                          poster={movie.poster}
-                          id={movie.id}
-                          avgRating={movie.avgRating}
-                          creator={movie.creator}
-                          currUser={currUser}
-                          filter={filterSelected}
-                          onDeleteMovieCallback={handleTryDeleteMovie}
-                          isSignedIn={isSignedIn}
-                          isDragging={snapshot.isDragging}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                );
-              })}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    );
+    main = movieData.map((movie, i) => {
+      return (
+        <Movie
+          key={movie.id}
+          title={movie.title}
+          year={movie.year}
+          genre={movie.genre}
+          director={movie.director}
+          actors={movie.actors}
+          plot={movie.plot}
+          ratings={movie.ratings}
+          poster={movie.poster}
+          id={movie.id}
+          avgRating={movie.avgRating}
+          creator={movie.creator}
+          currUser={currUser}
+          filter={filterSelected}
+          onDeleteMovieCallback={handleTryDeleteMovie}
+          isSignedIn={isSignedIn}
+        />
+      );
+    });
   }
 
   let message = <p style={{ margin: "0 0 0 20px" }}>{actionMessage}</p>;
