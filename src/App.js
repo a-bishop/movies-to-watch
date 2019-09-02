@@ -61,6 +61,15 @@ const SignOut = styled.button`
   font-family: Futura;
 `;
 
+const LoadMore = styled.div`
+  background: darkKhaki;
+  border: 2px solid black;
+  text-align: center;
+  margin: 1rem;
+  padding: 1rem;
+  cursor: pointer;
+`
+
 const App = () => {
   let name = null;
   if (firebase.auth().currentUser !== null) {
@@ -80,6 +89,8 @@ const App = () => {
   const [sortSelected, setSortSelected] = useState("");
   const [currUser, setCurrUser] = useState(name);
   const [filterSelected, setFilterSelected] = useState("");
+  const [limit, setLimit] = useState(10);
+
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -185,13 +196,13 @@ const App = () => {
       db.collection("movies")
         .doc(movieToDelete.id)
         .delete()
-        .then(function() {
+        .then(function () {
           handleDeleteMovie(movieToDelete);
           setActionMessage("Movie successfully deleted!");
           setTimeout(() => setActionMessage(""), 1500);
           console.log("Movie successfully deleted!");
         })
-        .catch(function(error) {
+        .catch(function (error) {
           setActionMessage("Error removing movie: ", error);
           setTimeout(() => setActionMessage(""), 1500);
         });
@@ -259,7 +270,7 @@ const App = () => {
     await firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
-      .catch(function(error) {
+      .catch(function (error) {
         // Handle Errors here.
         console.log(error.code);
         setSignInError("There was an error with these credentials");
@@ -283,11 +294,11 @@ const App = () => {
     await firebase
       .auth()
       .signOut()
-      .then(function() {
+      .then(function () {
         // Sign-out successful.
         console.log("signed out");
       })
-      .catch(function(error) {
+      .catch(function (error) {
         // An error happened.
         console.log(error);
       });
@@ -327,7 +338,7 @@ const App = () => {
     </div>
   );
   if (!isLoading) {
-    main = movieData.map((movie, i) => {
+    main = movieData.slice(0, limit).map((movie, i) => {
       return (
         <Movie
           key={movie.id}
@@ -350,9 +361,11 @@ const App = () => {
       );
     });
   }
-
+  let loadMoreButton;
+  if (!isLoading && limit <= movieData.length) {
+    loadMoreButton = <LoadMore onClick={() => setLimit(limit => limit + 10)}>Load More ...</LoadMore>;
+  }
   let message = <p style={{ margin: "0 0 0 20px" }}>{actionMessage}</p>;
-
   let addMovie = (
     <div>
       <SignIn handleSignInCallback={handleSignIn} signInError={signInError}>
@@ -381,7 +394,6 @@ const App = () => {
       </span>
     );
   }
-
   return (
     <div className="App">
       <div
@@ -423,6 +435,7 @@ const App = () => {
           </div>
           {message}
           {main}
+          {loadMoreButton}
         </div>
       </Main>
     </div>
