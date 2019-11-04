@@ -4,14 +4,15 @@
   "private": true,
   "dependencies": {
     "firebase": "^5.11.1",
-    "react": "^16.9.0",
+    "react": "^16.11.0",
     "react-beautiful-dnd": "^11.0.5",
-    "react-dom": "^16.9.0",
+    "react-dom": "^16.11.0",
+    "react-modal": "^3.11.1",
     "react-scripts": "3.0.0",
     "react-select": "^2.4.4",
     "react-spinners": "^0.5.12",
     "react-with-gesture": "^4.0.8",
-    "styled-components": "^4.3.2"
+    "styled-components": "^4.4.1"
   },
   "scripts": {
     "start": "react-scripts start",

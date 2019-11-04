@@ -1,20 +1,29 @@
 /* eslint-disable no-unused-expressions */
-import React from "react";
-import styled from "styled-components";
-import checkmark from "./assets/checkmark.png";
+import React from 'react';
+import styled from 'styled-components';
+import checkmark from './assets/checkmark.png';
 
 const Title = styled.h3`
   margin: 0;
 `;
 
-const Delete = styled.button`
+const Button = styled.button`
   border: 1px solid black;
   border-radius: 5px;
-  background: mistyRose;
   margin-bottom: 10px;
+  margin-right: 5px;
   padding: 8px;
   font-size: 0.8em;
   font-family: Futura;
+`;
+
+const Delete = styled(Button)`
+  background: rgba(255, 228, 225, 0.7);
+  margin-right: 10px;
+`;
+
+const AddToWatchlist = styled(Button)`
+  background: rgba(184, 225, 201, 0.7);
 `;
 
 const Movie = ({
@@ -32,45 +41,65 @@ const Movie = ({
   filter,
   id,
   onDeleteMovieCallback,
-  isSignedIn
+  onAddToWatchlistCallback,
+  onRemoveFromWatchlistCallback,
+  isSignedIn,
+  isModal
 }) => {
-  let deleteButton = null;
-
-  if (filter !== "" && creator !== filter) {
+  if (filter !== '' && creator !== filter) {
     return null;
   }
 
-  if (isSignedIn && (currUser === "Andrew" || currUser === creator)) {
-    deleteButton = (
+  let addToWatchlist = !isModal && (
+    <AddToWatchlist onClick={() => onAddToWatchlistCallback({ title, id })}>
+      Add To Watchlist
+    </AddToWatchlist>
+  );
+
+  let deleteButton = null;
+
+  deleteButton = isSignedIn &&
+    (currUser === 'Andrew' || currUser === creator) &&
+    !isModal && (
       <Delete onClick={() => onDeleteMovieCallback({ title, id })}>
         Delete Movie
       </Delete>
     );
-  }
+
+  if (isModal)
+    deleteButton = (
+      <Delete onClick={() => onRemoveFromWatchlistCallback({ title, id })}>
+        Remove From Watchlist
+      </Delete>
+    );
+
   let genreDisplay = null;
-  if (genre !== "N/A") {
+  if (genre !== 'N/A') {
     genreDisplay = <li>{genre}</li>;
   }
   let directorDisplay = null;
-  if (director !== "N/A") {
+  if (director !== 'N/A') {
     directorDisplay = <li>Directed by {director}</li>;
   }
   let actorsDisplay = null;
-  if (actors !== "N/A") {
+  if (actors !== 'N/A') {
     actorsDisplay = <li>Starring {actors}</li>;
   }
   let posterImg = null;
-  if (poster !== "N/A") {
+  if (poster !== 'N/A') {
     posterImg = (
-      <div style={{ flexBasis: "1 1 45%", padding: "0 10px 0 10px" }}>
+      <div style={{ flexBasis: '1 1 45%', padding: '0 10px 0 10px' }}>
         <img alt={title} src={poster} width="180" />
       </div>
     );
   }
   return (
     <div className={className}>
-      <div style={{ flex: "1 1 55%" }}>
-        {deleteButton}
+      <div style={{ flex: '1 1 55%' }}>
+        <div style={{ display: 'flex' }}>
+          {deleteButton}
+          {addToWatchlist}
+        </div>
         <Title>{title}</Title>
         <ul>
           <li>{year}</li>
@@ -81,16 +110,16 @@ const Movie = ({
         <section>{plot}</section>
         <div
           style={{
-            fontStyle: "italic",
-            fontSize: "0.9em",
-            width: "200px",
-            marginTop: "1em",
-            marginBottom: "1em"
+            fontStyle: 'italic',
+            fontSize: '0.9em',
+            width: '200px',
+            marginTop: '1em',
+            marginBottom: '1em'
           }}
         >
           {ratings.map(rating => {
-            if (rating.Source === "Internet Movie Database") {
-              rating.Source = "IMDb";
+            if (rating.Source === 'Internet Movie Database') {
+              rating.Source = 'IMDb';
             }
             return (
               <div key={rating.Source}>
@@ -101,13 +130,13 @@ const Movie = ({
           <br />
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              fontStyle: "normal",
-              fontSize: "0.9em"
+              display: 'flex',
+              alignItems: 'center',
+              fontStyle: 'normal',
+              fontSize: '0.9em'
             }}
           >
-            <img alt="checkmark" src={checkmark} style={{ width: "20px" }} />
+            <img alt="checkmark" src={checkmark} style={{ width: '20px' }} />
             &nbsp;Recommended by {creator}
           </div>
         </div>
