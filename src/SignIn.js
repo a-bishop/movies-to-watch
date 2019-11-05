@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import styled from "styled-components";
+import React, { useState } from 'react';
+import styled from 'styled-components';
 
 const Title = styled.h4`
   margin-top: 0;
@@ -8,6 +8,7 @@ const Title = styled.h4`
 const Submit = styled.input`
   border: 1px solid black;
   border-radius: 5px;
+  width: 50%;
   background: cornflowerBlue;
   margin-top: 1.7em;
   padding: 8px;
@@ -17,6 +18,7 @@ const Submit = styled.input`
 
 const TextInput = styled.input`
   height: 3em;
+  width: 100%;
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
@@ -29,22 +31,22 @@ const Error = styled.p`
 `;
 
 const Form = styled.form`
+  display: flex;
+  flex-direction: column;
   border: 2px solid black;
-  padding: 2em 2em 1em 2em;
+  padding: 2em 2em 0 2em;
   margin: 0 0 1em 1em;
   background: lavender;
   width: 165px;
-`;
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 250px;
+  @media (max-width: 700px) {
+    width: 210px;
+  }
 `;
 
 const SignIn = ({ handleSignInCallback, signInError }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   function handleSetEmail(e) {
     setEmail(e.target.value);
@@ -60,35 +62,33 @@ const SignIn = ({ handleSignInCallback, signInError }) => {
   }
 
   return (
-    <Container>
-      <Form className="Form" onSubmit={handleSignInCallback}>
-        <Title>Sign in to edit</Title>
-        <label htmlFor="email">Email:</label>
+    <Form className="Form" onSubmit={handleSignInCallback}>
+      <Title>Sign in to edit</Title>
+      <label htmlFor="email">Email:</label>
+      <TextInput
+        type="email"
+        id="email"
+        onChange={handleSetEmail}
+        value={email}
+      />
+      <div style={{ marginTop: '10px' }}>
+        <label htmlFor="password">Password:</label>
         <TextInput
-          type="email"
-          id="email"
-          onChange={handleSetEmail}
-          value={email}
+          type="password"
+          id="password"
+          onChange={handleSetPassword}
+          value={password}
         />
-        <div style={{ marginTop: "10px" }}>
-          <label htmlFor="password">Password:</label>
-          <TextInput
-            type="password"
-            id="password"
-            onChange={handleSetPassword}
-            value={password}
-          />
-        </div>
-        <Submit
-          className="Submit"
-          onClick={handleSignIn}
-          type="submit"
-          value="Sign In"
-        />
-        <br />
-        <Error>{signInError}</Error>
-      </Form>
-    </Container>
+      </div>
+      <Submit
+        className="Submit"
+        onClick={handleSignIn}
+        type="submit"
+        value="Sign In"
+      />
+      <br />
+      <Error>{signInError}</Error>
+    </Form>
   );
 };
 

@@ -8,12 +8,16 @@ const ModalStyle = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) !important;
-  max-height: calc(100vh - 210px);
+  max-height: calc(100vh - 150px);
   overflow-y: auto;
-  padding: 20px;
+  padding: 1em 2em 1em 2em;
   background-color: white;
   border: 1px solid grey;
   z-index: 2;
+
+  @media only screen and (max-width: 500px) {
+    width: 90%;
+  }
 `;
 
 const ModalContainer = styled.div`
@@ -22,6 +26,7 @@ const ModalContainer = styled.div`
   left: 0;
   width: 100%;
   height: calc(100vh);
+  font-family: 'Futura';
   background-color: rgba(220, 220, 220, 0.5);
   z-index: 1;
 `;

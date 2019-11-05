@@ -23,7 +23,7 @@ const Delete = styled(Button)`
 `;
 
 const AddToWatchlist = styled(Button)`
-  background: rgba(184, 225, 201, 0.7);
+  background: rgba(179, 197, 192, 0.7);
 `;
 
 const Movie = ({

@@ -124,13 +124,15 @@ const DismissButton = styled.span`
   align-self: flex-end;
   margin-right: 1rem;
   cursor: pointer;
+  font-weight: bold;
+  font-size: 1.5em;
+  opacity: 0.6;
 `;
 
 const MessageContainer = styled.div`
   position: fixed;
   left: 50%;
   transform: translate(-50%, 0);
-  border: 1px dotted black;
   border-radius: 5px;
   ${props => {
     let color = [];
@@ -141,11 +143,11 @@ const MessageContainer = styled.div`
           color = 'rgba(255, 218, 224, 0.7)';
           break;
         case 'warn':
-          color = 'rgba(250,250,210,0.7)';
+          color = 'rgba(229,229,116,0.7)';
           break;
         case 'alert':
         default:
-          color = 'rgba(184, 225, 201, 0.7)';
+          color = 'rgba(201, 226, 222, 0.9)';
           break;
       }
       return css`
@@ -154,6 +156,13 @@ const MessageContainer = styled.div`
       `;
     }
   }}
+  @media only screen and (max-width: 500px) {
+    width: 80%;
+  }
+`;
+
+const NoWatchListMsg = styled.h4`
+  padding: 0 2em 1em 2em;
 `;
 
 const App = () => {
@@ -195,14 +204,13 @@ const App = () => {
     if (!isLoading) {
       localStorage.setItem('watchList', JSON.stringify(watchList));
       localStorage.setItem('movieData', JSON.stringify(movieData));
-      localStorage.setItem('users', JSON.stringify(users));
     }
   }, [watchList, movieData, users, isLoading]);
 
   useEffect(() => {
     let data = [];
     let titles = [];
-    async function getMoviesFromDB() {
+    async function getMovies() {
       const moviesStored = JSON.parse(localStorage.getItem('movieData'));
       if (moviesStored) {
         setMovieData(moviesStored);
@@ -229,21 +237,16 @@ const App = () => {
       setTitles(titles);
       setIsLoading(false);
     }
-    async function getUsersAndWatchlistFromDB() {
+    async function getUsersAndWatchlist() {
       const users = [];
       const watchList = [];
-      let usersStored;
       let watchListStored;
       try {
-        usersStored = JSON.parse(localStorage.getItem('users'));
         watchListStored = JSON.parse(localStorage.getItem('watchList'));
-        if (usersStored) {
-          setUsers(usersStored);
-        }
         if (watchListStored) {
           setWatchList(watchListStored);
+          return;
         }
-        if (usersStored && watchListStored) return;
       } catch (e) {
         console.log(e);
       }
@@ -254,21 +257,15 @@ const App = () => {
           querySnapshot.forEach(user => {
             const userData = user.data();
             users.push(userData.displayName);
-            if (currUser === userData.displayName) {
-              if (userData.watchList) {
-                userData.watchList.forEach(movie => {
-                  watchList.push(movie);
-                });
-              }
-            }
+            // TODO: retrieve watchlist from firebase
           });
         });
       await db;
       setUsers(users);
       setWatchList(watchList);
     }
-    getMoviesFromDB()
-      .then(getUsersAndWatchlistFromDB())
+    getMovies()
+      .then(getUsersAndWatchlist())
       .catch(error =>
         console.log('Error retrieving movies or user data', error)
       );
@@ -361,9 +358,8 @@ const App = () => {
   function handleAddMovie([movie, year]) {
     setAlreadyAdded(false);
     setNotFound(false);
-    movie = movie.trim();
+    const movieSearchString = movie.trim().replace(' ', '+');
     const movieCapitalized = capitalize(movie);
-    const movieSearchString = movie.replace(' ', '+');
     if (!titles.includes(movieCapitalized)) {
       const url = `https://www.omdbapi.com/?t=${movieSearchString}&y=${year}&plot=full&apikey=${API_KEY}`;
       fetch(url)
@@ -567,7 +563,9 @@ const App = () => {
   }
 
   let modalContent = (
-    <h4>You have not yet added any movies to your watchlist.</h4>
+    <NoWatchListMsg>
+      You have not yet added any movies to your watchlist.
+    </NoWatchListMsg>
   );
   if (watchList.length > 0) {
     const watchListData = movieData.filter(movie =>
