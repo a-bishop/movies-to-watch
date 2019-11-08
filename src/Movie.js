@@ -46,10 +46,6 @@ const Movie = ({
   isSignedIn,
   isModal
 }) => {
-  if (filter !== '' && creator !== filter) {
-    return null;
-  }
-
   let addToWatchlist = !isModal && (
     <AddToWatchlist onClick={() => onAddToWatchlistCallback({ title, id })}>
       Add To Watchlist

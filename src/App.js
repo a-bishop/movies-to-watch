@@ -189,6 +189,7 @@ const App = () => {
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
+  const [currentlyViewing, setCurrentlyViewing] = useState(0);
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -204,6 +205,7 @@ const App = () => {
     if (!isLoading) {
       localStorage.setItem('watchList', JSON.stringify(watchList));
       localStorage.setItem('movieData', JSON.stringify(movieData));
+      localStorage.setItem('users', JSON.stringify(users));
     }
   }, [watchList, movieData, users, isLoading]);
 
@@ -224,6 +226,8 @@ const App = () => {
         .orderBy('created', 'desc')
         .get()
         .then(querySnapshot => {
+          console.log(querySnapshot);
+          if (!querySnapshot) console.log('error getting movies');
           querySnapshot.forEach(doc => {
             const docData = doc.data();
             const id = doc.id;
@@ -237,16 +241,22 @@ const App = () => {
       setTitles(titles);
       setIsLoading(false);
     }
+
     async function getUsersAndWatchlist() {
       const users = [];
       const watchList = [];
-      let watchListStored;
+      let watchListStored = null;
+      let usersStored = null;
       try {
         watchListStored = JSON.parse(localStorage.getItem('watchList'));
         if (watchListStored) {
           setWatchList(watchListStored);
-          return;
         }
+        usersStored = JSON.parse(localStorage.getItem('users'));
+        if (usersStored) {
+          setUsers(usersStored);
+        }
+        if (watchListStored && usersStored) return;
       } catch (e) {
         console.log(e);
       }
@@ -264,6 +274,7 @@ const App = () => {
       setUsers(users);
       setWatchList(watchList);
     }
+
     getMovies()
       .then(getUsersAndWatchlist())
       .catch(error =>
@@ -501,12 +512,14 @@ const App = () => {
 
   if (!isLoading) {
     main = movieData.slice(0, limit).map(movie => {
+      if (filterSelected !== '' && movie.creator !== filterSelected) {
+        return null;
+      }
       return (
         <Movie
           key={movie.id}
           {...movie}
           currUser={currUser}
-          filter={filterSelected}
           onDeleteMovieCallback={handleTryDeleteMovie}
           onAddToWatchlistCallback={handleAddToWatchlist}
           isSignedIn={isSignedIn}
@@ -517,7 +530,11 @@ const App = () => {
   }
 
   let loadMoreButton;
-  if (!isLoading && limit <= movieData.length) {
+  if (
+    !isLoading &&
+    limit <= movieData.length &&
+    limit <= Object.values(main).filter(obj => obj !== null).length
+  ) {
     loadMoreButton = (
       <LoadMore onClick={() => setLimit(limit => limit + 10)}>
         Load More ...
