@@ -245,34 +245,34 @@ const App = () => {
     }
 
     async function getUsersAndWatchlist() {
-      const users = [];
+      // const users = [];
       const watchList = [];
       let watchListStored = null;
-      let usersStored = null;
+      // let usersStored = null;
       try {
         watchListStored = JSON.parse(localStorage.getItem('watchList'));
         if (watchListStored && watchListStored !== []) {
           setWatchList(watchListStored);
         }
-        usersStored = JSON.parse(localStorage.getItem('users'));
-        if (usersStored && usersStored !== []) {
-          setUsers(usersStored);
-        }
+        // usersStored = JSON.parse(localStorage.getItem('users'));
+        // if (usersStored && usersStored !== []) {
+        //   setUsers(usersStored);
+        // }
       } catch (e) {
         console.log(e);
       }
-      console.log('fetching');
-      await db
-        .collection('users')
-        .get()
-        .then(querySnapshot => {
-          querySnapshot.forEach(user => {
-            const userData = user.data();
-            users.push(userData.displayName);
-            // TODO: retrieve watchlist from firebase
-          });
-        });
-      setUsers(users);
+      // console.log('fetching');
+      // await db
+      //   .collection('users')
+      //   .get()
+      //   .then(querySnapshot => {
+      //     querySnapshot.forEach(user => {
+      //       const userData = user.data();
+      //       users.push(userData.displayName);
+      //       // TODO: retrieve watchlist from firebase
+      //     });
+      //   });
+      setUsers(['Andrew', 'Travis']);
       setWatchList(watchList);
     }
 
