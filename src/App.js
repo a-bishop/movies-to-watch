@@ -251,14 +251,20 @@ const App = () => {
       let usersStored = null;
       try {
         watchListStored = JSON.parse(localStorage.getItem('watchList'));
-        if (watchListStored) {
+        if (watchListStored && watchListStored !== []) {
           setWatchList(watchListStored);
         }
         usersStored = JSON.parse(localStorage.getItem('users'));
-        if (usersStored) {
+        if (usersStored && usersStored !== []) {
           setUsers(usersStored);
         }
-        if (watchListStored && usersStored) return;
+        if (
+          watchListStored &&
+          usersStored &&
+          watchListStored !== [] &&
+          usersStored !== []
+        )
+          return;
       } catch (e) {
         console.log(e);
       }
