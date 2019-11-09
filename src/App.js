@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+
 import Movie from './Movie';
 import AddMovie from './AddMovie';
 import SignIn from './SignIn';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
+
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
-
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
