@@ -5,7 +5,6 @@ import AddMovie from './AddMovie';
 import SignIn from './SignIn';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
-
 import config from './config';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
@@ -13,6 +12,21 @@ import styled, { css, keyframes } from 'styled-components';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
+
+if (process.env.NODE_ENV === 'production') {
+  config = {
+    IMDB_KEY: process.env.imdbApiKey,
+    FIREBASE: {
+      apiKey: process.env.firebaseApiKey,
+      authDomain:  process.env.firebaseAuthDomain,
+      databaseURL: process.env.firebaseDatabaseUrl,
+      projectId: process.env.firebaseProjectId,
+      storageBucket: process.env.firebaseStorageBucket,
+      messagingSenderId: process.env.firebaseMessagingSenderId,
+      appId: process.env.firebaseAppId,
+    }
+  }
+}
 
 const FIREBASE = config.FIREBASE;
 firebase.initializeApp(FIREBASE);
@@ -158,6 +172,7 @@ const NoWatchListMsg = styled.h4`
 `;
 
 const App = () => {
+  console.log(process.env.NODE_ENV);
   let name = null;
   if (firebase.auth().currentUser) {
     name = firebase.auth().currentUser.displayName;
@@ -620,9 +635,7 @@ const App = () => {
                 modalDismissedCallback={() => setShouldArrowAnimate(false)}
                 hide={hide}
               >
-                <ModalContainer>
-                  {modalContent}
-                </ModalContainer>
+                <ModalContainer>{modalContent}</ModalContainer>
               </MyModal>
             )}
           />
