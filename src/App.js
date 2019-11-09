@@ -258,16 +258,10 @@ const App = () => {
         if (usersStored && usersStored !== []) {
           setUsers(usersStored);
         }
-        if (
-          watchListStored &&
-          usersStored &&
-          watchListStored !== [] &&
-          usersStored !== []
-        )
-          return;
       } catch (e) {
         console.log(e);
       }
+      console.log('fetching');
       await db
         .collection('users')
         .get()
@@ -278,7 +272,6 @@ const App = () => {
             // TODO: retrieve watchlist from firebase
           });
         });
-      await db;
       setUsers(users);
       setWatchList(watchList);
     }
