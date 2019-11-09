@@ -125,7 +125,7 @@ const MessageContainer = styled.div`
   left: 50%;
   transform: translate(-50%, 0);
   border-radius: 5px;
-  // z-index: 1;
+  z-index: 3;
   ${props => {
     let color = [];
     if (!props.type) return;

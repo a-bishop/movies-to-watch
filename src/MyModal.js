@@ -19,7 +19,7 @@ const ModalWrapper = styled.div`
   max-width: 90%;
   background-color: white;
   padding: 2em;
-  z-index: 3;
+  z-index: 2;
 `;
 
 const ModalFullScreenContainer = styled.div`
@@ -30,7 +30,7 @@ const ModalFullScreenContainer = styled.div`
   height: 10000vh;
   font-family: 'Futura';
   background-color: rgba(220, 220, 220, 0.5);
-  z-index: 2;
+  z-index: 1;
 `;
 
 const Dismiss = styled.span`
