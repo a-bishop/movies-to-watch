@@ -4,31 +4,41 @@ import styled from 'styled-components';
 import ClickOutsideDismiss from './ClickOutsideDismiss';
 
 const ModalStyle = styled.div`
-  position: absolute;
+  height: 90%;
+  background-color: white;
+  overflow-y: auto;
+  width: 100%;
+`;
+
+const ModalWrapper = styled.div`
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) !important;
-  max-height: calc(100vh - 150px);
-  overflow-y: auto;
-  padding: 1em 2em 1em 2em;
+  height: calc(100vh - 150px);
+  max-width: 90%;
   background-color: white;
-  border: 1px solid grey;
+  padding: 2em;
   z-index: 2;
-
-  @media only screen and (max-width: 500px) {
-    width: 90%;
-  }
 `;
 
-const ModalContainer = styled.div`
+const ModalFullScreenContainer = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100vh);
+  height: 10000vh;
   font-family: 'Futura';
   background-color: rgba(220, 220, 220, 0.5);
   z-index: 1;
+`;
+
+const Dismiss = styled.span`
+  margin-right: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1.5em;
+  opacity: 0.6;
 `;
 
 const MyModal = props =>
@@ -37,9 +47,21 @@ const MyModal = props =>
       dismiss={props.hide}
       modalDismissedCallback={props.modalDismissedCallback}
     >
-      <ModalContainer className="modalContainer">
-        <ModalStyle>{props.children}</ModalStyle>
-      </ModalContainer>
+      <ModalFullScreenContainer className="modalContainer">
+        <ModalWrapper>
+          <div
+            style={{
+              display: 'flex',
+              width: '100%',
+              justifyContent: 'flex-end',
+              marginBottom: '10px'
+            }}
+          >
+            <Dismiss className="dismissButton">X</Dismiss>
+          </div>
+          <ModalStyle>{props.children}</ModalStyle>
+        </ModalWrapper>
+      </ModalFullScreenContainer>
     </ClickOutsideDismiss>,
     document.getElementById('modal-root')
   );

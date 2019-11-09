@@ -120,15 +120,6 @@ const ModalContainer = styled.div`
   flex-direction: column;
 `;
 
-const DismissButton = styled.span`
-  align-self: flex-end;
-  margin-right: 1rem;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1.5em;
-  opacity: 0.6;
-`;
-
 const MessageContainer = styled.div`
   position: fixed;
   left: 50%;
@@ -189,7 +180,6 @@ const App = () => {
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
-  const [currentlyViewing, setCurrentlyViewing] = useState(0);
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -504,17 +494,19 @@ const App = () => {
     setShouldArrowAnimate(true);
   }
 
-  let main = (
+  let mainData = null;
+
+  let currentlyViewing = (
     <div style={{ padding: '50px 0 0 50px' }}>
       <SyncLoader sizeUnit={'px'} size={30} color={'darkKhaki'} />
     </div>
   );
-
   if (!isLoading) {
-    main = movieData.slice(0, limit).map(movie => {
-      if (filterSelected !== '' && movie.creator !== filterSelected) {
-        return null;
-      }
+    mainData = movieData.filter(
+      movie => filterSelected === '' || movie.creator === filterSelected
+    );
+
+    currentlyViewing = mainData.slice(0, limit).map(movie => {
       return (
         <Movie
           key={movie.id}
@@ -530,11 +522,7 @@ const App = () => {
   }
 
   let loadMoreButton;
-  if (
-    !isLoading &&
-    limit <= movieData.length &&
-    limit <= Object.values(main).filter(obj => obj !== null).length
-  ) {
+  if (!isLoading && limit <= movieData.length && mainData.length > 10) {
     loadMoreButton = (
       <LoadMore onClick={() => setLimit(limit => limit + 10)}>
         Load More ...
@@ -632,7 +620,6 @@ const App = () => {
                 hide={hide}
               >
                 <ModalContainer>
-                  <DismissButton className="dismissButton">X</DismissButton>
                   {modalContent}
                 </ModalContainer>
               </MyModal>
@@ -671,7 +658,7 @@ const App = () => {
               </Select>
             </Sort>
           </div>
-          {main}
+          {currentlyViewing}
           {loadMoreButton}
         </div>
       </Main>
