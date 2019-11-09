@@ -10,10 +10,10 @@ const Submit = styled.input`
   border-radius: 5px;
   width: 50%;
   background: cornflowerBlue;
-  margin-top: 1.7em;
   padding: 8px;
   font-size: 1em;
   font-weight: bold;
+  margin-top: 1.7em;
 `;
 
 const TextInput = styled.input`

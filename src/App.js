@@ -218,10 +218,9 @@ const App = () => {
       const moviesStored = JSON.parse(localStorage.getItem('movieData'));
       if (moviesStored) {
         setMovieData(moviesStored);
-        titles = moviesStored.filter(movie => movie.title);
+        titles = moviesStored.map(movie => movie.title);
+        console.log('stored titles', titles);
         setTitles(titles);
-        setIsLoading(false);
-        return;
       }
       await db
         .collection('movies')
@@ -238,15 +237,16 @@ const App = () => {
             data.push(allData);
             titles.push(docData.title);
           });
+          console.log('setting');
+          setTitles(titles);
+          setMovieData(data);
+          setIsLoading(false);
         });
-      setMovieData(data);
-      setTitles(titles);
-      setIsLoading(false);
     }
 
     async function getUsersAndWatchlist() {
       // const users = [];
-      const watchList = [];
+      // const watchList = [];
       let watchListStored = null;
       // let usersStored = null;
       try {
@@ -273,11 +273,12 @@ const App = () => {
       //     });
       //   });
       setUsers(['Andrew', 'Travis']);
-      setWatchList(watchList);
+      // setWatchList(watchList);
     }
 
     getMovies()
       .then(getUsersAndWatchlist())
+      .then(setIsLoading(false))
       .catch(error =>
         console.log('Error retrieving movies or user data', error)
       );
@@ -372,6 +373,7 @@ const App = () => {
     setNotFound(false);
     const movieSearchString = movie.trim().replace(' ', '+');
     const movieCapitalized = capitalize(movie);
+    console.log('titles', titles);
     if (!titles.includes(movieCapitalized)) {
       const url = `https://www.omdbapi.com/?t=${movieSearchString}&y=${year}&plot=full&apikey=${API_KEY}`;
       fetch(url)
