@@ -168,6 +168,33 @@ const NoWatchListMsg = styled.h4`
   padding: 0 2em 1em 2em;
 `;
 
+const Flex = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const FlexContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin: -10px 0;
+
+  > * {
+    margin: 10px 0;
+  }
+`;
+
+const Search = styled.input`
+  margin-right: 2em;
+  font-family: Futura;
+  min-width: 200px;
+  border: 1px solid black;
+  height: 2.5em;
+`;
+
 const App = () => {
   let name = null;
   if (firebase.auth().currentUser) {
@@ -192,6 +219,7 @@ const App = () => {
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -219,15 +247,14 @@ const App = () => {
       if (moviesStored) {
         setMovieData(moviesStored);
         titles = moviesStored.map(movie => movie.title);
-        console.log('stored titles', titles);
         setTitles(titles);
+        return;
       }
       await db
         .collection('movies')
         .orderBy('created', 'desc')
         .get()
         .then(querySnapshot => {
-          console.log(querySnapshot);
           if (!querySnapshot) console.log('error getting movies');
           querySnapshot.forEach(doc => {
             const docData = doc.data();
@@ -237,10 +264,8 @@ const App = () => {
             data.push(allData);
             titles.push(docData.title);
           });
-          console.log('setting');
           setTitles(titles);
           setMovieData(data);
-          setIsLoading(false);
         });
     }
 
@@ -373,7 +398,6 @@ const App = () => {
     setNotFound(false);
     const movieSearchString = movie.trim().replace(' ', '+');
     const movieCapitalized = capitalize(movie);
-    console.log('titles', titles);
     if (!titles.includes(movieCapitalized)) {
       const url = `https://www.omdbapi.com/?t=${movieSearchString}&y=${year}&plot=full&apikey=${API_KEY}`;
       fetch(url)
@@ -508,17 +532,21 @@ const App = () => {
   }
 
   let mainData = null;
-
   let currentlyViewing = (
     <div style={{ padding: '50px 0 0 50px' }}>
       <SyncLoader sizeUnit={'px'} size={30} color={'darkKhaki'} />
     </div>
   );
   if (!isLoading) {
+    console.log(searchTerm);
+    const re = new RegExp(searchTerm, 'i');
     mainData = movieData.filter(
-      movie => filterSelected === '' || movie.creator === filterSelected
+      movie =>
+        re.test(movie.title) &&
+        (filterSelected === '' || movie.creator === filterSelected)
     );
 
+    console.log(mainData);
     currentlyViewing = mainData.slice(0, limit).map(movie => {
       return (
         <Movie
@@ -574,7 +602,9 @@ const App = () => {
   let displayUser = null;
   if (currUser) {
     displayUser = (
-      <span style={{ fontSize: '.7em', fontWeight: 'normal' }}>
+      <span
+        style={{ fontSize: '.7em', fontWeight: 'normal', whiteSpace: 'nowrap' }}
+      >
         &nbsp;Hello, {currUser}
       </span>
     );
@@ -607,36 +637,39 @@ const App = () => {
     <div className="App">
       {message}
       <TitleContainer>
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Title>Movies to watch! {displayUser}</Title>
-          <ToggleContent
-            toggle={show => (
-              <div onClick={handleShouldArrowAnimate}>
-                <WatchListContainer onClick={show}>
-                  <h4 style={{ margin: '0' }}>My watchlist</h4>
-                  <p>
-                    <DownArrow animate={shouldArrowAnimate}></DownArrow>
-                  </p>
-                </WatchListContainer>
-              </div>
-            )}
-            content={hide => (
-              <MyModal
-                modalDismissedCallback={() => setShouldArrowAnimate(false)}
-                hide={hide}
-              >
-                <ModalContainer>{modalContent}</ModalContainer>
-              </MyModal>
-            )}
-          />
-        </div>
+        <FlexContainer>
+          <Flex>
+            <Title>Movies to watch! {displayUser}</Title>
+          </Flex>
+          <Flex>
+            <Search
+              type="text"
+              name="Search"
+              placeholder="Search for a movie"
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            <ToggleContent
+              toggle={show => (
+                <div onClick={handleShouldArrowAnimate}>
+                  <WatchListContainer onClick={show}>
+                    <h4 style={{ margin: '0' }}>My watchlist</h4>
+                    <p>
+                      <DownArrow animate={shouldArrowAnimate}></DownArrow>
+                    </p>
+                  </WatchListContainer>
+                </div>
+              )}
+              content={hide => (
+                <MyModal
+                  modalDismissedCallback={() => setShouldArrowAnimate(false)}
+                  hide={hide}
+                >
+                  <ModalContainer>{modalContent}</ModalContainer>
+                </MyModal>
+              )}
+            />
+          </Flex>
+        </FlexContainer>
         {signOut}
       </TitleContainer>
       <Main>
