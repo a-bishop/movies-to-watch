@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './App.css';
 
 import Movie from './Movie';
@@ -196,11 +196,6 @@ const Search = styled.input`
 `;
 
 const App = () => {
-  let name = null;
-  if (firebase.auth().currentUser) {
-    name = firebase.auth().currentUser.displayName;
-  }
-
   const [titles, setTitles] = useState([]);
   const [movieData, setMovieData] = useState([]);
   const [notFound, setNotFound] = useState(false);
@@ -213,13 +208,21 @@ const App = () => {
   const [actionMessage, setActionMessage] = useState('');
   const [messageType, setMessageType] = useState(null);
   const [sortSelected, setSortSelected] = useState('');
-  const [currUser, setCurrUser] = useState(name);
+  const [currUser, setCurrUser] = useState('');
   const [filterSelected, setFilterSelected] = useState('');
   const [limit, setLimit] = useState(10);
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  function usePrevious(value) {
+    const ref = useRef();
+    useEffect(() => {
+      ref.current = value;
+    }, [value]);
+    return ref.current;
+  }
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -231,13 +234,16 @@ const App = () => {
     }
   });
 
+  const prevWatchList = usePrevious(watchList);
+  const prevMovieData = usePrevious(movieData);
   useEffect(() => {
     if (!isLoading) {
+      if (prevWatchList !== watchList)
       localStorage.setItem('watchList', JSON.stringify(watchList));
+      if (prevMovieData !== movieData)
       localStorage.setItem('movieData', JSON.stringify(movieData));
-      localStorage.setItem('users', JSON.stringify(users));
     }
-  }, [watchList, movieData, users, isLoading]);
+  }, [watchList, movieData, users, isLoading, prevWatchList, prevMovieData]);
 
   useEffect(() => {
     let data = [];
@@ -269,40 +275,38 @@ const App = () => {
         });
     }
 
-    async function getUsersAndWatchlist() {
-      // const users = [];
-      // const watchList = [];
-      let watchListStored = null;
-      // let usersStored = null;
-      try {
-        watchListStored = JSON.parse(localStorage.getItem('watchList'));
-        if (watchListStored && watchListStored !== []) {
-          setWatchList(watchListStored);
+    async function getUsersAndWatchList() {
+      if (currUser) {
+        let watchListData = [];
+        if (currUser === 'Guest') {
+          try {
+            watchListData = JSON.parse(localStorage.getItem('watchList'));
+          } catch (e) {
+            console.log(e);
+          }
         }
-        // usersStored = JSON.parse(localStorage.getItem('users'));
-        // if (usersStored && usersStored !== []) {
-        //   setUsers(usersStored);
-        // }
-      } catch (e) {
-        console.log(e);
+        let users = [];
+        await db
+          .collection('users')
+          .get()
+          .then(querySnapshot => {
+            querySnapshot.forEach(user => {
+              const data = user.data();
+              users.push(data.displayName);
+              if (currUser === data.displayName) {
+                if (data.watchList) {
+                  data.watchList.forEach(movie => watchListData.push(movie));
+                }
+              }
+            });
+            setUsers(users);
+            setWatchList(watchListData);
+          });
       }
-      // console.log('fetching');
-      // await db
-      //   .collection('users')
-      //   .get()
-      //   .then(querySnapshot => {
-      //     querySnapshot.forEach(user => {
-      //       const userData = user.data();
-      //       users.push(userData.displayName);
-      //       // TODO: retrieve watchlist from firebase
-      //     });
-      //   });
-      setUsers(['Andrew', 'Travis']);
-      // setWatchList(watchList);
     }
 
     getMovies()
-      .then(getUsersAndWatchlist())
+      .then(getUsersAndWatchList())
       .then(setIsLoading(false))
       .catch(error =>
         console.log('Error retrieving movies or user data', error)
@@ -436,7 +440,6 @@ const App = () => {
 
   function handleSetActionMessage(msg, type) {
     setMessageType(type);
-    setActionMessage('');
     setActionMessage(msg);
     setTimeout(() => {
       setActionMessage('');
@@ -444,14 +447,48 @@ const App = () => {
     }, 2500);
   }
 
-  function handleAddToWatchlist(event) {
+  async function getFirebaseUserDocId() {
+    let id;
+    await db
+      .collection('users')
+      .where('displayName', '==', currUser)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          id = doc.id;
+        });
+      })
+      .catch(function(error) {
+        console.log('Error getting id: ', error);
+      });
+    return id;
+  }
+
+  async function updateFirebaseWatchList(id) {
+    console.log(watchList);
+    await db
+      .collection('users')
+      .doc(id)
+      .update({ watchList })
+      .catch(function(error) {
+        console.log('Error updating watchList: ', error);
+      });
+  }
+
+  async function handleAddToWatchlist(event) {
     if (!watchList.includes(event.title)) {
-      setWatchList(movies => [...movies, event.title]);
-      // TODO: Add to firestore
+      const newWatchList = watchList;
+      newWatchList.push(event.title)
+      setWatchList(newWatchList);
+      console.log(watchList);
       handleSetActionMessage(
         `${event.title} was added to your watchlist!`,
         'alert'
       );
+      if (currUser !== 'Guest') {
+        const id = await getFirebaseUserDocId();
+        await updateFirebaseWatchList(id);
+      }
     } else {
       handleSetActionMessage(
         `${event.title} is already in your watchlist!`,
@@ -460,7 +497,7 @@ const App = () => {
     }
   }
 
-  function handleRemoveFromWatchList(event) {
+  async function handleRemoveFromWatchList(event) {
     const watchListCopy = watchList;
     const movies = watchListCopy.filter(movie => movie !== event.title);
     setWatchList(movies);
@@ -468,6 +505,10 @@ const App = () => {
       `${event.title} has been removed from your watchlist!`,
       'warn'
     );
+    if (currUser !== 'Guest') {
+      const id = await getFirebaseUserDocId();
+      await updateFirebaseWatchList(id);
+    }
   }
 
   function capitalize(string) {
@@ -538,7 +579,6 @@ const App = () => {
     </div>
   );
   if (!isLoading) {
-    console.log(searchTerm);
     const re = new RegExp(searchTerm, 'i');
     mainData = movieData.filter(
       movie =>
@@ -546,7 +586,6 @@ const App = () => {
         (filterSelected === '' || movie.creator === filterSelected)
     );
 
-    console.log(mainData);
     currentlyViewing = mainData.slice(0, limit).map(movie => {
       return (
         <Movie
