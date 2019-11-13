@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 const Title = styled.h4`
   margin-top: 0;
+  margin-bottom: 0;
 `;
 
 const Submit = styled.input`
@@ -63,7 +64,18 @@ const SignIn = ({ handleSignInCallback, signInError }) => {
 
   return (
     <Form className="Form" onSubmit={handleSignInCallback}>
-      <Title>Sign in to edit</Title>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start'
+        }}
+      >
+        <Title>Sign in to edit</Title>
+        <span style={{ fontSize: '0.8em', marginBottom: '1.3em' }}>
+          or <a href="mailto:andrew.bishop53@gmail.com">request an invite</a>
+        </span>
+      </div>
       <label htmlFor="email">Email:</label>
       <TextInput
         type="email"

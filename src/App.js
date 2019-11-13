@@ -13,19 +13,6 @@ import config from './config';
 import 'firebase/firestore';
 import 'firebase/auth';
 
-// const config = {
-//   IMDB_KEY: process.env.REACT_APP_imdbApiKey,
-//   FIREBASE: {
-//     apiKey: process.env.REACT_APP_firebaseApiKey,
-//     authDomain: process.env.REACT_APP_firebaseAuthDomain,
-//     databaseURL: process.env.REACT_APP_firebaseDatabaseUrl,
-//     projectId: process.env.REACT_APP_firebaseProjectId,
-//     storageBucket: process.env.REACT_APP_firebaseStorageBucket,
-//     messagingSenderId: process.env.REACT_APP_firebaseMessagingSenderId,
-//     appId: process.env.REACT_APP_firebaseAppId
-//   }
-// };
-
 const FIREBASE = config.FIREBASE;
 firebase.initializeApp(FIREBASE);
 const db = firebase.firestore();
@@ -214,16 +201,12 @@ const App = () => {
   const [limit, setLimit] = useState(10);
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
+  const [
+    movieHasBeenAddedToWatchList,
+    setMovieHasBeenAddedToWatchList
+  ] = useState(false);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // function usePrevious(value) {
-  //   const ref = useRef();
-  //   useEffect(() => {
-  //     ref.current = value;
-  //   }, [value]);
-  //   return ref.current;
-  // }
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -235,14 +218,11 @@ const App = () => {
     }
   });
 
-  // const prevWatchList = usePrevious(watchList);
-  // const prevMovieData = usePrevious(movieData);
-  useEffect(() => {
-    if (!isLoading) {
+  if (!isLoading) {
+    if (movieHasBeenAddedToWatchList)
       localStorage.setItem('watchList', JSON.stringify(watchList));
-      localStorage.setItem('movieData', JSON.stringify(movieData));
-    }
-  });
+    localStorage.setItem('movieData', JSON.stringify(movieData));
+  }
 
   useEffect(() => {
     let data = [];
@@ -478,6 +458,7 @@ const App = () => {
       const newWatchList = watchList;
       newWatchList.push(event.title);
       setWatchList(newWatchList);
+      setMovieHasBeenAddedToWatchList(true);
       handleSetActionMessage(
         `${event.title} was added to your watchlist!`,
         'alert'
