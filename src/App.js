@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
 import Movie from './Movie';
@@ -9,21 +9,22 @@ import MyModal from './MyModal';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
 import firebase from 'firebase/app';
+import config from './config';
 import 'firebase/firestore';
 import 'firebase/auth';
 
-const config = {
-  IMDB_KEY: process.env.REACT_APP_imdbApiKey,
-  FIREBASE: {
-    apiKey: process.env.REACT_APP_firebaseApiKey,
-    authDomain: process.env.REACT_APP_firebaseAuthDomain,
-    databaseURL: process.env.REACT_APP_firebaseDatabaseUrl,
-    projectId: process.env.REACT_APP_firebaseProjectId,
-    storageBucket: process.env.REACT_APP_firebaseStorageBucket,
-    messagingSenderId: process.env.REACT_APP_firebaseMessagingSenderId,
-    appId: process.env.REACT_APP_firebaseAppId
-  }
-};
+// const config = {
+//   IMDB_KEY: process.env.REACT_APP_imdbApiKey,
+//   FIREBASE: {
+//     apiKey: process.env.REACT_APP_firebaseApiKey,
+//     authDomain: process.env.REACT_APP_firebaseAuthDomain,
+//     databaseURL: process.env.REACT_APP_firebaseDatabaseUrl,
+//     projectId: process.env.REACT_APP_firebaseProjectId,
+//     storageBucket: process.env.REACT_APP_firebaseStorageBucket,
+//     messagingSenderId: process.env.REACT_APP_firebaseMessagingSenderId,
+//     appId: process.env.REACT_APP_firebaseAppId
+//   }
+// };
 
 const FIREBASE = config.FIREBASE;
 firebase.initializeApp(FIREBASE);
@@ -216,13 +217,13 @@ const App = () => {
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  function usePrevious(value) {
-    const ref = useRef();
-    useEffect(() => {
-      ref.current = value;
-    }, [value]);
-    return ref.current;
-  }
+  // function usePrevious(value) {
+  //   const ref = useRef();
+  //   useEffect(() => {
+  //     ref.current = value;
+  //   }, [value]);
+  //   return ref.current;
+  // }
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
@@ -234,16 +235,14 @@ const App = () => {
     }
   });
 
-  const prevWatchList = usePrevious(watchList);
-  const prevMovieData = usePrevious(movieData);
+  // const prevWatchList = usePrevious(watchList);
+  // const prevMovieData = usePrevious(movieData);
   useEffect(() => {
     if (!isLoading) {
-      if (prevWatchList !== watchList)
       localStorage.setItem('watchList', JSON.stringify(watchList));
-      if (prevMovieData !== movieData)
       localStorage.setItem('movieData', JSON.stringify(movieData));
     }
-  }, [watchList, movieData, users, isLoading, prevWatchList, prevMovieData]);
+  });
 
   useEffect(() => {
     let data = [];
@@ -464,12 +463,11 @@ const App = () => {
     return id;
   }
 
-  async function updateFirebaseWatchList(id) {
-    console.log(watchList);
+  async function updateFirebaseWatchList(id, movies) {
     await db
       .collection('users')
       .doc(id)
-      .update({ watchList })
+      .update({ watchList: movies })
       .catch(function(error) {
         console.log('Error updating watchList: ', error);
       });
@@ -478,16 +476,15 @@ const App = () => {
   async function handleAddToWatchlist(event) {
     if (!watchList.includes(event.title)) {
       const newWatchList = watchList;
-      newWatchList.push(event.title)
+      newWatchList.push(event.title);
       setWatchList(newWatchList);
-      console.log(watchList);
       handleSetActionMessage(
         `${event.title} was added to your watchlist!`,
         'alert'
       );
       if (currUser !== 'Guest') {
         const id = await getFirebaseUserDocId();
-        await updateFirebaseWatchList(id);
+        await updateFirebaseWatchList(id, newWatchList);
       }
     } else {
       handleSetActionMessage(
@@ -507,7 +504,7 @@ const App = () => {
     );
     if (currUser !== 'Guest') {
       const id = await getFirebaseUserDocId();
-      await updateFirebaseWatchList(id);
+      await updateFirebaseWatchList(id, movies);
     }
   }
 
@@ -654,7 +651,7 @@ const App = () => {
       You have not yet added any movies to your watchlist.
     </NoWatchListMsg>
   );
-  if (watchList.length > 0) {
+  if (watchList && watchList.length > 0) {
     const watchListData = movieData.filter(movie =>
       watchList.includes(movie.title)
     );
