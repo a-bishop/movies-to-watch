@@ -8,4 +8,4 @@ Technologies Used:
 - Styled Components
 - Open Movie Database API
 
-https://movie-recommendations.netlify.com
+[Demo](https://movie-recommendations.netlify.com)
