@@ -1,7 +1,7 @@
-/* eslint-disable no-unused-expressions */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import checkmark from './assets/checkmark.png';
+import config from './config';
 
 const Title = styled.h3`
   margin: 0;
@@ -26,6 +26,37 @@ const AddToWatchlist = styled(Button)`
   background: rgba(179, 197, 192, 0.7);
 `;
 
+const PosterContainer = styled.div`
+  position: relative;
+  flex-basis: 1 1 45%;
+  padding: 0 10px 0 10px;
+  &:hover {
+    .overlay {
+      opacity: 1;
+    }
+    .poster {
+      filter: brightness(70%);
+    }
+  }
+`;
+
+const Poster = styled.img`
+  display: block;
+`;
+
+const Overlay = styled.div`
+  position: absolute;
+  top: 100;
+  background: rgba(0, 0, 0, 0.5); /* Black see-through */
+  width: 70%;
+  transition: 0.5s ease;
+  opacity: 0;
+  color: white;
+  font-size: 16px;
+  padding: 20px;
+  text-align: center;
+`;
+
 const Movie = ({
   className,
   title,
@@ -38,7 +69,6 @@ const Movie = ({
   creator,
   currUser,
   poster,
-  filter,
   id,
   onDeleteMovieCallback,
   onAddToWatchlistCallback,
@@ -46,6 +76,29 @@ const Movie = ({
   isSignedIn,
   isModal
 }) => {
+  const [trailerLink, setTrailerLink] = useState('');
+
+  useEffect(() => {
+    async function fetchYoutubeLink() {
+      const data = await fetch(
+        `https://api.themoviedb.org/3/search/movie?api_key=${
+          config.TMDB_KEY
+        }&primary_release_year=${year}&query=${encodeURI(title)}`
+      );
+      const json = await data.json();
+      const tmdbId = json.results[0].id;
+      const trailers = await fetch(
+        `http://api.themoviedb.org/3/movie/${tmdbId}/videos?api_key=${config.TMDB_KEY}`
+      );
+      const trailersJson = await trailers.json();
+      const key = trailersJson.results[0].key;
+      return `https://www.youtube.com/watch?v=${key}`;
+    }
+    fetchYoutubeLink().then(link => {
+      setTrailerLink(link);
+    });
+  });
+
   let addToWatchlist = !isModal && (
     <AddToWatchlist onClick={() => onAddToWatchlistCallback({ title, id })}>
       Add To Watchlist
@@ -69,26 +122,20 @@ const Movie = ({
       </Delete>
     );
 
-  let genreDisplay = null;
-  if (genre !== 'N/A') {
-    genreDisplay = <li>{genre}</li>;
-  }
-  let directorDisplay = null;
-  if (director !== 'N/A') {
-    directorDisplay = <li>Directed by {director}</li>;
-  }
-  let actorsDisplay = null;
-  if (actors !== 'N/A') {
-    actorsDisplay = <li>Starring {actors}</li>;
-  }
-  let posterImg = null;
-  if (poster !== 'N/A') {
-    posterImg = (
-      <div style={{ flexBasis: '1 1 45%', padding: '0 10px 0 10px' }}>
-        <img alt={title} src={poster} width="180" />
-      </div>
-    );
-  }
+  const genreDisplay = genre !== 'N/A' ? <li>{genre}</li> : null;
+  const directorDisplay = director !== 'N/A' ? <li>{director}</li> : null;
+  const actorsDisplay = actors !== 'N/A' ? <li>{actors}</li> : null;
+
+  const posterImg =
+    poster !== 'N/A' ? (
+      <PosterContainer>
+        <a href={trailerLink}>
+          <Poster className="poster" alt={title} src={poster} width="180" />
+          <Overlay className="overlay">Watch trailer</Overlay>
+        </a>
+      </PosterContainer>
+    ) : null;
+
   return (
     <div className={className}>
       <div style={{ flex: '1 1 55%' }}>

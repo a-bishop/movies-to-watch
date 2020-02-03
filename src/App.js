@@ -265,6 +265,7 @@ const App = () => {
           }
         }
         let users = [];
+        if (!watchListData) watchListData = [];
         await db
           .collection('users')
           .get()
@@ -272,6 +273,7 @@ const App = () => {
             querySnapshot.forEach(user => {
               const data = user.data();
               users.push(data.displayName);
+              console.log(currUser === data.displayName);
               if (currUser === data.displayName) {
                 if (data.watchList) {
                   data.watchList.forEach(movie => watchListData.push(movie));
