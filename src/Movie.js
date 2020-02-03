@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import checkmark from './assets/checkmark.png';
-import config from './config';
 
 const Title = styled.h3`
   margin: 0;
@@ -32,10 +31,10 @@ const PosterContainer = styled.div`
   padding: 0 10px 0 10px;
   &:hover {
     .overlay {
-      opacity: ${p => (p.trailerLink ? 1 : 0)};
+      opacity: 1;
     }
     .poster {
-      filter: brightness(${p => (p.trailerLink ? 70 : 100)}%);
+      filter: brightness(70%);
     }
   }
 `;
@@ -47,7 +46,7 @@ const Poster = styled.img`
 
 const Overlay = styled.div`
   position: absolute;
-  top: 100;
+  top: 100px;
   background: rgba(0, 0, 0, 0.5); /* Black see-through */
   width: 70%;
   transition: 0.5s ease;
@@ -77,46 +76,21 @@ const Movie = ({
   isSignedIn,
   isModal
 }) => {
-  const [trailerLink, setTrailerLink] = useState('');
-
-  useEffect(() => {
-    async function fetchYoutubeLink() {
-      const releaseYear = year.substr(-4, 4);
-      const data = await fetch(
-        `https://api.themoviedb.org/3/search/movie?api_key=${
-          config.TMDB_KEY
-        }&primary_release_year=${releaseYear}&query=${encodeURI(
-          title
-        )}&append_to_response=videos`
-      );
-      const json = await data.json();
-      let tmdbId = null;
-      let link = `https://www.youtube.com/results?search_query=${actors.replace(
-        / /g,
-        '+'
-      )}+${title.replace(/ /g, '+')}+${releaseYear}+trailer`;
-      if (json.results[0]) tmdbId = json.results[0].id;
-      if (tmdbId) {
-        const trailerData = await fetch(
-          `http://api.themoviedb.org/3/movie/${tmdbId}/videos?api_key=${config.TMDB_KEY}`
-        );
-        const videos = await trailerData.json();
-        if (videos.results) {
-          videos.results.forEach(video => {
-            if (video.type === 'Trailer') {
-              link = `https://www.youtube.com/watch?v=${video.key}`;
-            }
-          });
-        }
-      }
-      return link;
+  function createYoutubeSearchLink() {
+    const releaseYear = year.substr(-4, 4);
+    let detailSearchString = toSearchString(title);
+    if (director !== 'N/A') {
+      detailSearchString += `+${toSearchString(director)}`;
+    } else {
+      detailSearchString += `+${toSearchString(actors)}`;
     }
-    fetchYoutubeLink()
-      .then(link => {
-        setTrailerLink(link);
-      })
-      .catch(error => console.log('Error retrieving youtube trailer', error));
-  });
+    let link = `https://www.youtube.com/results?search_query=${detailSearchString}+${releaseYear}+english+trailer`;
+    return link;
+  }
+
+  function toSearchString(string) {
+    return string.replace(/ /g, '+');
+  }
 
   let addToWatchlist = !isModal && (
     <AddToWatchlist onClick={() => onAddToWatchlistCallback({ title, id })}>
@@ -147,8 +121,8 @@ const Movie = ({
 
   const posterImg =
     poster !== 'N/A' ? (
-      <PosterContainer trailerLink={trailerLink}>
-        <a href={trailerLink}>
+      <PosterContainer>
+        <a href={createYoutubeSearchLink()}>
           <Poster className="poster" alt={title} src={poster} width="180" />
           <Overlay className="overlay">Watch trailer</Overlay>
         </a>
