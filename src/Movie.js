@@ -32,16 +32,17 @@ const PosterContainer = styled.div`
   padding: 0 10px 0 10px;
   &:hover {
     .overlay {
-      opacity: 1;
+      opacity: ${p => (p.trailerLink ? 1 : 0)};
     }
     .poster {
-      filter: brightness(70%);
+      filter: brightness(${p => (p.trailerLink ? 70 : 100)}%);
     }
   }
 `;
 
 const Poster = styled.img`
   display: block;
+  transition: 0.5s ease;
 `;
 
 const Overlay = styled.div`
@@ -83,20 +84,38 @@ const Movie = ({
       const data = await fetch(
         `https://api.themoviedb.org/3/search/movie?api_key=${
           config.TMDB_KEY
-        }&primary_release_year=${year}&query=${encodeURI(title)}`
+        }&primary_release_year=${year}&query=${encodeURI(
+          title
+        )}&append_to_response=videos`
       );
       const json = await data.json();
-      const tmdbId = json.results[0].id;
-      const trailers = await fetch(
-        `http://api.themoviedb.org/3/movie/${tmdbId}/videos?api_key=${config.TMDB_KEY}`
-      );
-      const trailersJson = await trailers.json();
-      const key = trailersJson.results[0].key;
-      return `https://www.youtube.com/watch?v=${key}`;
+      console.log(title, '\n\n');
+      let tmdbId = null;
+      let link = `https://www.youtube.com/results?search_query=${title.replace(
+        ' ',
+        '+'
+      )}+${year}+trailer`;
+      if (json.results[0]) tmdbId = json.results[0].id;
+      if (tmdbId) {
+        const trailerData = await fetch(
+          `http://api.themoviedb.org/3/movie/${tmdbId}/videos?api_key=${config.TMDB_KEY}`
+        );
+        const videos = await trailerData.json();
+        if (videos.results) {
+          videos.results.forEach(video => {
+            if (video.type === 'Trailer') {
+              link = `https://www.youtube.com/watch?v=${video.key}`;
+            }
+          });
+        }
+      }
+      return link;
     }
-    fetchYoutubeLink().then(link => {
-      setTrailerLink(link);
-    });
+    fetchYoutubeLink()
+      .then(link => {
+        setTrailerLink(link);
+      })
+      .catch(error => console.log('Error retrieving youtube trailer', error));
   });
 
   let addToWatchlist = !isModal && (
@@ -128,7 +147,7 @@ const Movie = ({
 
   const posterImg =
     poster !== 'N/A' ? (
-      <PosterContainer>
+      <PosterContainer trailerLink={trailerLink}>
         <a href={trailerLink}>
           <Poster className="poster" alt={title} src={poster} width="180" />
           <Overlay className="overlay">Watch trailer</Overlay>
