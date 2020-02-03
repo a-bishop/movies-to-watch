@@ -81,20 +81,20 @@ const Movie = ({
 
   useEffect(() => {
     async function fetchYoutubeLink() {
+      const releaseYear = year.substr(-4, 4);
       const data = await fetch(
         `https://api.themoviedb.org/3/search/movie?api_key=${
           config.TMDB_KEY
-        }&primary_release_year=${year}&query=${encodeURI(
+        }&primary_release_year=${releaseYear}&query=${encodeURI(
           title
         )}&append_to_response=videos`
       );
       const json = await data.json();
-      console.log(title, '\n\n');
       let tmdbId = null;
-      let link = `https://www.youtube.com/results?search_query=${title.replace(
-        ' ',
+      let link = `https://www.youtube.com/results?search_query=${actors.replace(
+        / /g,
         '+'
-      )}+${year}+trailer`;
+      )}+${title.replace(/ /g, '+')}+${releaseYear}+trailer`;
       if (json.results[0]) tmdbId = json.results[0].id;
       if (tmdbId) {
         const trailerData = await fetch(
