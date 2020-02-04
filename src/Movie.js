@@ -92,28 +92,24 @@ const Movie = ({
     return string.replace(/ /g, '+');
   }
 
-  let addToWatchlist = !isModal && (
+  const addToWatchlist = !isModal && (
     <AddToWatchlist onClick={() => onAddToWatchlistCallback({ title, id })}>
       Add To Watchlist
     </AddToWatchlist>
   );
 
-  let deleteButton = null;
-
-  deleteButton = isSignedIn &&
-    (currUser === 'Andrew' || currUser === creator) &&
-    !isModal && (
+  const deleteButton = isModal ? (
+    <Delete onClick={() => onRemoveFromWatchlistCallback({ title, id })}>
+      Remove From Watchlist
+    </Delete>
+  ) : (
+    isSignedIn &&
+    (currUser === 'Andrew' || currUser === creator) && (
       <Delete onClick={() => onDeleteMovieCallback({ title, id })}>
         Delete Movie
       </Delete>
-    );
-
-  if (isModal)
-    deleteButton = (
-      <Delete onClick={() => onRemoveFromWatchlistCallback({ title, id })}>
-        Remove From Watchlist
-      </Delete>
-    );
+    )
+  );
 
   const genreDisplay = genre !== 'N/A' ? <li>{genre}</li> : null;
   const directorDisplay = director !== 'N/A' ? <li>{director}</li> : null;
