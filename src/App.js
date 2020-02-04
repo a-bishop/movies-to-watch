@@ -38,7 +38,7 @@ const Sort = styled.div`
   margin-left: 20px;
   margin-top: 10px;
   margin-bottom: 10px;
-  padding-top: 0
+  padding-top: 0;
   width: 300px;
   display: flex;
   align-items: center;
@@ -201,10 +201,7 @@ const App = () => {
   const [limit, setLimit] = useState(10);
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
-  const [
-    movieHasBeenAddedToWatchList,
-    setMovieHasBeenAddedToWatchList
-  ] = useState(false);
+  const [movieAddedToWatchList, setMovieAddedToWatchList] = useState(false);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -219,7 +216,7 @@ const App = () => {
   });
 
   if (!isLoading) {
-    if (movieHasBeenAddedToWatchList)
+    if (movieAddedToWatchList)
       localStorage.setItem('watchList', JSON.stringify(watchList));
     localStorage.setItem('movieData', JSON.stringify(movieData));
   }
@@ -265,7 +262,6 @@ const App = () => {
           }
         }
         let users = [];
-        if (!watchListData) watchListData = [];
         await db
           .collection('users')
           .get()
@@ -273,7 +269,6 @@ const App = () => {
             querySnapshot.forEach(user => {
               const data = user.data();
               users.push(data.displayName);
-              console.log(currUser === data.displayName);
               if (currUser === data.displayName) {
                 if (data.watchList) {
                   data.watchList.forEach(movie => watchListData.push(movie));
@@ -304,8 +299,7 @@ const App = () => {
       }
       ratingTotal += doubleVal;
     }
-    let avgRating = (ratingTotal / numRatings).toFixed(2);
-    return avgRating;
+    return (ratingTotal / numRatings).toFixed(2);
   };
 
   useEffect(() => {
@@ -348,43 +342,37 @@ const App = () => {
     }
   }, [newMovieAdded, currUser]);
 
-  function handleTryDeleteMovie(movie) {
-    setMovieToDelete(movie);
-  }
-
   useEffect(() => {
     if (movieToDelete !== '') {
+      console.log({ movieToDelete });
       db.collection('movies')
         .doc(movieToDelete.id)
         .delete()
-        .then(function() {
-          handleDeleteMovie(movieToDelete);
+        .then(() => {
+          const updatedMovies = movieData.filter(
+            eachMovie => eachMovie.id !== movieToDelete.id
+          );
+          const updatedTitles = titles.filter(
+            eachTitle => eachTitle !== movieToDelete.title
+          );
+          setTitles(updatedTitles);
+          setMovieData(updatedMovies);
+          setMovieToDelete('');
           handleSetActionMessage('Movie successfully deleted!', 'alert');
         })
         .catch(function(error) {
           handleSetActionMessage(`Error removing movie: ${error}`, 'error');
         });
     }
-    function handleDeleteMovie(movie) {
-      const updatedMovies = movieData.filter(
-        eachMovie => eachMovie.id !== movie.id
-      );
-      const updatedTitles = titles.filter(
-        eachTitle => eachTitle !== movie.title
-      );
-      setTitles(updatedTitles);
-      setMovieData(updatedMovies);
-      setMovieToDelete('');
-    }
-  }, [movieData, movieToDelete, titles]);
+  }, [movieToDelete, movieData, titles]);
 
   function handleAddMovie([movie, year]) {
     setAlreadyAdded(false);
     setNotFound(false);
-    const movieSearchString = movie.trim().replace(' ', '+');
-    const movieCapitalized = capitalize(movie);
-    if (!titles.includes(movieCapitalized)) {
-      const url = `https://www.omdbapi.com/?t=${movieSearchString}&y=${year}&plot=full&apikey=${API_KEY}`;
+    if (!titles.includes(capitalize(movie))) {
+      const url = `https://www.omdbapi.com/?t=${movie
+        .trim()
+        .replace(' ', '+')}&y=${year}&plot=full&apikey=${API_KEY}`;
       fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -460,7 +448,7 @@ const App = () => {
       const newWatchList = watchList;
       newWatchList.push(event.title);
       setWatchList(newWatchList);
-      setMovieHasBeenAddedToWatchList(true);
+      setMovieAddedToWatchList(true);
       handleSetActionMessage(
         `${event.title} was added to your watchlist!`,
         'alert'
@@ -548,55 +536,62 @@ const App = () => {
     setSortSelected('');
   }, [movieData, sortSelected]);
 
-  function handleShouldArrowAnimate() {
-    setShouldArrowAnimate(true);
-  }
+  const re = new RegExp(searchTerm, 'i');
 
-  let mainData = null;
-  let currentlyViewing = (
+  const mainData = isLoading
+    ? null
+    : movieData.filter(
+        movie =>
+          re.test(movie.title) &&
+          (filterSelected === '' || movie.creator === filterSelected)
+      );
+
+  const currentlyViewing = isLoading ? (
     <div style={{ padding: '50px 0 0 50px' }}>
       <SyncLoader sizeUnit={'px'} size={30} color={'darkKhaki'} />
     </div>
-  );
-  if (!isLoading) {
-    const re = new RegExp(searchTerm, 'i');
-    mainData = movieData.filter(
-      movie =>
-        re.test(movie.title) &&
-        (filterSelected === '' || movie.creator === filterSelected)
-    );
-
-    currentlyViewing = mainData.slice(0, limit).map(movie => {
+  ) : (
+    mainData.slice(0, limit).map(movie => {
       return (
         <Movie
           key={movie.id}
           {...movie}
           currUser={currUser}
-          onDeleteMovieCallback={handleTryDeleteMovie}
+          onDeleteMovieCallback={() => setMovieToDelete(movie)}
           onAddToWatchlistCallback={handleAddToWatchlist}
           isSignedIn={isSignedIn}
           isModal={false}
         />
       );
-    });
-  }
+    })
+  );
 
-  let loadMoreButton;
-  if (!isLoading && limit <= movieData.length && mainData.length > 10) {
-    loadMoreButton = (
+  const loadMoreButton =
+    !isLoading && limit <= movieData.length && mainData.length > 10 ? (
       <LoadMore onClick={() => setLimit(limit => limit + 10)}>
         Load More ...
       </LoadMore>
-    );
-  }
+    ) : null;
 
-  let message = (
+  const message = (
     <MessageContainer type={messageType}>
       <span>{actionMessage}</span>
     </MessageContainer>
   );
 
-  let addMovie = (
+  const signOut = isSignedIn ? (
+    <SignOut onClick={handleSignOut}>Sign Out</SignOut>
+  ) : null;
+
+  const addMovie = isSignedIn ? (
+    <div>
+      <AddMovie
+        handleAddMovieCallback={handleAddMovie}
+        alreadyAdded={alreadyAdded}
+        notFound={notFound}
+      />
+    </div>
+  ) : (
     <div>
       <SignIn handleSignInCallback={handleSignIn} signInError={signInError}>
         Sign In
@@ -604,30 +599,13 @@ const App = () => {
     </div>
   );
 
-  let signOut = null;
-  if (isSignedIn) {
-    addMovie = (
-      <div>
-        <AddMovie
-          handleAddMovieCallback={handleAddMovie}
-          alreadyAdded={alreadyAdded}
-          notFound={notFound}
-        />
-      </div>
-    );
-    signOut = <SignOut onClick={handleSignOut}>Sign Out</SignOut>;
-  }
-
-  let displayUser = null;
-  if (currUser) {
-    displayUser = (
-      <span
-        style={{ fontSize: '.7em', fontWeight: 'normal', whiteSpace: 'nowrap' }}
-      >
-        &nbsp;Hello, {currUser}
-      </span>
-    );
-  }
+  const displayUser = currUser ? (
+    <span
+      style={{ fontSize: '.7em', fontWeight: 'normal', whiteSpace: 'nowrap' }}
+    >
+      &nbsp;Hello, {currUser}
+    </span>
+  ) : null;
 
   let modalContent = (
     <NoWatchListMsg>
@@ -644,7 +622,7 @@ const App = () => {
         {...movie}
         currUser={currUser}
         filter={filterSelected}
-        onDeleteMovieCallback={handleTryDeleteMovie}
+        onDeleteMovieCallback={() => setMovieToDelete(movie)}
         onRemoveFromWatchlistCallback={handleRemoveFromWatchList}
         isSignedIn={isSignedIn}
         isModal={true}
@@ -669,7 +647,7 @@ const App = () => {
             />
             <ToggleContent
               toggle={show => (
-                <div onClick={handleShouldArrowAnimate}>
+                <div onClick={() => setShouldArrowAnimate(true)}>
                   <WatchListContainer onClick={show}>
                     <h4 style={{ margin: '0' }}>My watchlist</h4>
                     <p>
