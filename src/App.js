@@ -126,7 +126,7 @@ const MessageContainer = styled.div`
   border-radius: 5px;
   z-index: 3;
   ${props => {
-    let color = [];
+    let color = 'rgba(201, 226, 222, 0.9)';
     if (!props.type) return;
     else {
       switch (props.type) {
@@ -138,7 +138,6 @@ const MessageContainer = styled.div`
           break;
         case 'alert':
         default:
-          color = 'rgba(201, 226, 222, 0.9)';
           break;
       }
       return css`
@@ -253,15 +252,11 @@ const App = () => {
 
     async function getUsersAndWatchList() {
       if (currUser) {
+        let users = [];
         let watchListData = [];
         if (currUser === 'Guest') {
-          try {
-            watchListData = JSON.parse(localStorage.getItem('watchList'));
-          } catch (e) {
-            console.log(e);
-          }
+          watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
         }
-        let users = [];
         await db
           .collection('users')
           .get()
