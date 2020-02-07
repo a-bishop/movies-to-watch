@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import checkmark from './assets/checkmark.png';
+import { toSearchString } from './helpers';
 
 const Title = styled.h3`
   margin: 0;
@@ -86,10 +87,6 @@ const Movie = ({
     }
     let link = `https://www.youtube.com/results?search_query=${detailSearchString}+${releaseYear}+english+trailer`;
     return link;
-  }
-
-  function toSearchString(string) {
-    return string.replace(/ /g, '+');
   }
 
   const addToWatchlist = !isModal && (

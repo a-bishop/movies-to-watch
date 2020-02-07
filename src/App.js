@@ -6,6 +6,8 @@ import AddMovie from './AddMovie';
 import SignIn from './SignIn';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
+import { capitalize, toSearchString, regEx } from './helpers';
+
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
 import firebase from 'firebase/app';
@@ -215,6 +217,8 @@ const App = () => {
   });
 
   if (!isLoading) {
+    // Only add watchlist data to local storage if movie has
+    // been added, to avoid overriding on initial load with empty array
     if (movieAddedToWatchList)
       localStorage.setItem('watchList', JSON.stringify(watchList));
     localStorage.setItem('movieData', JSON.stringify(movieData));
@@ -284,6 +288,8 @@ const App = () => {
       );
   }, [currUser]);
 
+  // Gets the average rating from applicable ratings systems
+  // ie. IMdB, Rotten Tomatoes and Metacritic
   const getAvgRatings = ratings => {
     let ratingTotal = 0;
     let numRatings = ratings.length;
@@ -325,7 +331,7 @@ const App = () => {
           creator
         })
         .then(docRef => {
-          // add the id and avg rating to the movie object client-side
+          // Add the id and average rating to the movie object client-side
           newMovieAdded.id = docRef.id;
           newMovieAdded.avgRating = getAvgRatings(newMovieAdded.ratings);
           setMovieData(movieData => [newMovieAdded, ...movieData]);
@@ -339,7 +345,6 @@ const App = () => {
 
   useEffect(() => {
     if (movieToDelete !== '') {
-      console.log({ movieToDelete });
       db.collection('movies')
         .doc(movieToDelete.id)
         .delete()
@@ -350,8 +355,8 @@ const App = () => {
           const updatedTitles = titles.filter(
             eachTitle => eachTitle !== movieToDelete.title
           );
-          setTitles(updatedTitles);
           setMovieData(updatedMovies);
+          setTitles(updatedTitles);
           setMovieToDelete('');
           handleSetActionMessage('Movie successfully deleted!', 'alert');
         })
@@ -365,9 +370,9 @@ const App = () => {
     setAlreadyAdded(false);
     setNotFound(false);
     if (!titles.includes(capitalize(movie))) {
-      const url = `https://www.omdbapi.com/?t=${movie
-        .trim()
-        .replace(' ', '+')}&y=${year}&plot=full&apikey=${API_KEY}`;
+      const url = `https://www.omdbapi.com/?t=${toSearchString(
+        movie
+      )}&y=${year}&plot=full&apikey=${API_KEY}`;
       fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -474,16 +479,11 @@ const App = () => {
     }
   }
 
-  function capitalize(string) {
-    return string.replace(/\b\w/g, l => l.toUpperCase());
-  }
-
   async function handleSignIn(email, password) {
     await firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
       .catch(function(error) {
-        console.log(error.code);
         setSignInError('There was an error with these credentials');
         setTimeout(() => setSignInError(''), 2500);
       });
@@ -531,13 +531,11 @@ const App = () => {
     setSortSelected('');
   }, [movieData, sortSelected]);
 
-  const re = new RegExp(searchTerm, 'i');
-
   const mainData = isLoading
     ? null
     : movieData.filter(
         movie =>
-          re.test(movie.title) &&
+          regEx(searchTerm).test(movie.title) &&
           (filterSelected === '' || movie.creator === filterSelected)
       );
 
