@@ -508,7 +508,9 @@ const App = () => {
     let newData = [...movieData];
     switch (sortSelected) {
       case 'dateAdded':
-        newData.sort((a, b) => (a.created > b.created ? -1 : 1));
+        newData.sort((a, b) =>
+          a.created.seconds > b.created.seconds ? -1 : 1
+        );
         setMovieData(newData);
         break;
       case 'releaseYear':
