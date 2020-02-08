@@ -15,10 +15,8 @@ import config from './config';
 import 'firebase/firestore';
 import 'firebase/auth';
 
-const FIREBASE = config.FIREBASE;
-firebase.initializeApp(FIREBASE);
+firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
-const API_KEY = config.IMDB_KEY;
 
 const Main = styled.div`
   display: flex;
@@ -372,7 +370,7 @@ const App = () => {
     if (!titles.includes(capitalize(movie))) {
       const url = `https://www.omdbapi.com/?t=${toSearchString(
         movie
-      )}&y=${year}&plot=full&apikey=${API_KEY}`;
+      )}&y=${year}&plot=full&apikey=${config.OMDB_KEY}`;
       fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -505,27 +503,27 @@ const App = () => {
   }
 
   useEffect(() => {
-    let newData = [...movieData];
+    let movieDataCopy = [...movieData];
     switch (sortSelected) {
       case 'dateAdded':
-        newData.sort((a, b) =>
+        movieDataCopy.sort((a, b) =>
           a.created.seconds > b.created.seconds ? -1 : 1
         );
-        setMovieData(newData);
+        setMovieData(movieDataCopy);
         break;
       case 'releaseYear':
-        newData.sort((a, b) => (a.year > b.year ? -1 : 1));
-        setMovieData(newData);
+        movieDataCopy.sort((a, b) => (a.year > b.year ? -1 : 1));
+        setMovieData(movieDataCopy);
         break;
       case 'title':
-        newData.sort((a, b) => (a.title > b.title ? 1 : -1));
-        setMovieData(newData);
+        movieDataCopy.sort((a, b) => (a.title > b.title ? 1 : -1));
+        setMovieData(movieDataCopy);
         break;
       case 'avgRating':
-        newData.sort((a, b) =>
+        movieDataCopy.sort((a, b) =>
           parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1
         );
-        setMovieData(newData);
+        setMovieData(movieDataCopy);
         break;
       default:
         break;
