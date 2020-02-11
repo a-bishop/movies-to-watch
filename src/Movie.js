@@ -90,19 +90,28 @@ const Movie = ({
   }
 
   const addToWatchlist = !isModal && (
-    <AddToWatchlist onClick={() => onAddToWatchlistCallback({ title, id })}>
+    <AddToWatchlist
+      data-testid="addButton"
+      onClick={() => onAddToWatchlistCallback({ title, id })}
+    >
       Add To Watchlist
     </AddToWatchlist>
   );
 
   const deleteButton = isModal ? (
-    <Delete onClick={() => onRemoveFromWatchlistCallback({ title, id })}>
+    <Delete
+      data-testid="removeButton"
+      onClick={() => onRemoveFromWatchlistCallback({ title, id })}
+    >
       Remove From Watchlist
     </Delete>
   ) : (
     isSignedIn &&
     (currUser === 'Andrew' || currUser === creator) && (
-      <Delete onClick={() => onDeleteMovieCallback({ title, id })}>
+      <Delete
+        data-testid="deleteButton"
+        onClick={() => onDeleteMovieCallback({ title, id })}
+      >
         Delete Movie
       </Delete>
     )

@@ -223,9 +223,9 @@ const App = () => {
   }
 
   useEffect(() => {
-    let data = [];
-    let titles = [];
     async function getMovies() {
+      let data = [];
+      let titles = [];
       const moviesStored = JSON.parse(localStorage.getItem('movieData'));
       if (moviesStored) {
         setMovieData(moviesStored);
@@ -286,16 +286,14 @@ const App = () => {
       );
   }, [currUser]);
 
-  // Gets the average rating from applicable ratings systems
+  // Gets the average rating from ratings systems
   // ie. IMdB, Rotten Tomatoes and Metacritic
   const getAvgRatings = ratings => {
     let ratingTotal = 0;
     let numRatings = ratings.length;
     for (const rating of ratings) {
       let doubleVal = parseFloat(rating.Value);
-      if (doubleVal <= 10) {
-        doubleVal *= 10;
-      }
+      if (doubleVal <= 10) doubleVal *= 10;
       ratingTotal += doubleVal;
     }
     return (ratingTotal / numRatings).toFixed(2);
@@ -629,7 +627,7 @@ const App = () => {
       <TitleContainer>
         <FlexContainer>
           <Flex>
-            <Title>Movies to watch! {displayUser}</Title>
+            <Title data-testid="title">Movies to watch!{displayUser}</Title>
           </Flex>
           <Flex>
             <Search
@@ -662,7 +660,7 @@ const App = () => {
         </FlexContainer>
         {signOut}
       </TitleContainer>
-      <Main>
+      <Main data-testid="main">
         {addMovie}
         <div style={{ flex: '1 1 70%' }}>
           <div
@@ -672,7 +670,9 @@ const App = () => {
             }}
           >
             <Sort>
-              <SelectMenuTitle>Editors' Picks:</SelectMenuTitle>
+              <SelectMenuTitle data-testid="editorsPicksTitle">
+                Editors' Picks:
+              </SelectMenuTitle>
               <Select onChange={e => setFilterSelected(e.target.value)}>
                 <option value="">All</option>
                 {users.map(user => (
@@ -683,7 +683,9 @@ const App = () => {
               </Select>
             </Sort>
             <Sort>
-              <SelectMenuTitle>Sort by:</SelectMenuTitle>
+              <SelectMenuTitle data-testid="sortTitle">
+                Sort by:
+              </SelectMenuTitle>
               <Select onChange={e => setSortSelected(e.target.value)}>
                 <option value="dateAdded">Recently Added</option>
                 <option value="avgRating">Top Rated</option>
