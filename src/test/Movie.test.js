@@ -28,32 +28,30 @@ const getMovieData = () => {
 };
 
 it('renders the movie component', async () => {
-  const movieData = getMovieData();
-  const { container } = render(<Movie {...movieData}></Movie>);
+  const { container } = render(<Movie {...getMovieData()}></Movie>);
   expect(container).toBeVisible();
 });
 
 it('displays the add to watchlist button when the user is not signed in', async () => {
-  const movieData = getMovieData();
   const { getByTestId } = render(
-    <Movie {...movieData} isSignedIn={false}></Movie>
+    <Movie {...getMovieData()} isSignedIn={false}></Movie>
   );
   const addButton = await waitForElement(() => getByTestId('addButton'));
   expect(addButton.textContent).toContain('Add To Watchlist');
 });
 
 it('displays the delete movie button when the user is signed in', async () => {
-  const movieData = getMovieData();
   const { getByTestId } = render(
-    <Movie {...movieData} isSignedIn={true}></Movie>
+    <Movie {...getMovieData()} isSignedIn={true}></Movie>
   );
   const delButton = await waitForElement(() => getByTestId('deleteButton'));
   expect(delButton.textContent).toContain('Delete Movie');
 });
 
 it('displays the remove from watchlist button when the movie is rendered in modal', async () => {
-  const movieData = getMovieData();
-  const { getByTestId } = render(<Movie {...movieData} isModal={true}></Movie>);
+  const { getByTestId } = render(
+    <Movie {...getMovieData()} isModal={true}></Movie>
+  );
   const delButton = await waitForElement(() => getByTestId('removeButton'));
   expect(delButton.textContent).toContain('Remove From Watchlist');
 });
