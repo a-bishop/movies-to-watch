@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import './App.css';
-
-import Movie from './Movie';
-import AddMovie from './AddMovie';
-import SignIn from './SignIn';
-import ToggleContent from './ToggleContent';
-import MyModal from './MyModal';
-import { capitalize, toSearchString, regEx } from './helpers';
-
+import _ from 'lodash';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
 import firebase from 'firebase/app';
 import config from './config';
 import 'firebase/firestore';
 import 'firebase/auth';
+
+import './App.css';
+import Movie from './Movie';
+import AddMovie from './AddMovie';
+import PasswordResetForm from './PasswordResetForm';
+import SignInForm from './SignInForm';
+import SignUpForm from './SignUpForm';
+import ToggleContent from './ToggleContent';
+import MyModal from './MyModal';
+import { capitalize, toSearchString, regEx } from './helpers';
+
 
 firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
@@ -182,6 +185,11 @@ const Search = styled.input`
   height: 2.5em;
 `;
 
+const FormContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`
+
 const App = () => {
   const [titles, setTitles] = useState([]);
   const [movieData, setMovieData] = useState([]);
@@ -192,6 +200,8 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
+  const [signUpError, setSignUpError] = useState('');
+  const [emailResetError, setEmailResetError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [messageType, setMessageType] = useState(null);
   const [sortSelected, setSortSelected] = useState('');
@@ -205,9 +215,11 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   firebase.auth().onAuthStateChanged(user => {
-    if (user) {
+    const currentUser = firebase.auth().currentUser;
+    console.log(currentUser);
+    if (user && user.emailVerified) {
       setIsSignedIn(true);
-      setCurrUser(firebase.auth().currentUser.displayName);
+      setCurrUser(currentUser.displayName);
     } else {
       setIsSignedIn(false);
       setCurrUser('Guest');
@@ -219,40 +231,34 @@ const App = () => {
     // been added, to avoid overriding on initial load with empty array
     if (movieAddedToWatchList)
       localStorage.setItem('watchList', JSON.stringify(watchList));
-    localStorage.setItem('movieData', JSON.stringify(movieData));
   }
 
   useEffect(() => {
+    let unsubscribe = () => {};
     async function getMovies() {
-      let data = [];
-      let titles = [];
-      const moviesStored = JSON.parse(localStorage.getItem('movieData'));
-      if (moviesStored) {
-        setMovieData(moviesStored);
-        titles = moviesStored.map(movie => movie.title);
-        setTitles(titles);
-        return;
-      }
-      await db
-        .collection('movies')
-        .orderBy('created', 'desc')
-        .get()
-        .then(querySnapshot => {
+      unsubscribe = db
+      .collection('movies')
+      .orderBy('created', 'desc')
+      .onSnapshot(querySnapshot => {
+          let data = [];
+          let movieTitles = [];
           if (!querySnapshot) console.log('error getting movies');
-          querySnapshot.forEach(doc => {
-            const docData = doc.data();
-            const id = doc.id;
-            const avgRating = getAvgRatings(docData.ratings);
-            const allData = { ...docData, id, avgRating };
-            data.push(allData);
-            titles.push(docData.title);
-          });
-          setTitles(titles);
-          setMovieData(data);
+          else { querySnapshot.forEach(doc => {
+              const docData = doc.data();
+              const id = doc.id;
+              const avgRating = getAvgRatings(docData.ratings);
+              const allData = { ...docData, id, avgRating };
+              data.push(allData);
+              movieTitles.push(docData.title);
+            });
+            setMovieData(data);
+            setTitles(movieTitles);
+          }
         });
     }
 
     async function getUsersAndWatchList() {
+
       if (currUser) {
         let users = [];
         let watchListData = [];
@@ -272,6 +278,15 @@ const App = () => {
                 }
               }
             });
+            if (currUser !== 'Guest') {
+              const displayName = firebase.auth().currentUser.displayName;
+              if (users.indexOf(displayName) === -1) {
+                db.collection('users')
+                .add({ displayName })
+                .then(users.push(displayName))
+                .catch(e => console.log(e))
+              }
+            }
             setUsers(users);
             setWatchList(watchListData);
           });
@@ -284,6 +299,10 @@ const App = () => {
       .catch(error =>
         console.log('Error retrieving movies or user data', error)
       );
+
+    return () => {
+      unsubscribe()
+    }
   }, [currUser]);
 
   // Gets the average rating from ratings systems
@@ -326,11 +345,7 @@ const App = () => {
           created,
           creator
         })
-        .then(docRef => {
-          // Add the id and average rating to the movie object client-side
-          newMovieAdded.id = docRef.id;
-          newMovieAdded.avgRating = getAvgRatings(newMovieAdded.ratings);
-          setMovieData(movieData => [newMovieAdded, ...movieData]);
+        .then(() => {
           handleSetActionMessage('Movie Added!', 'alert');
         })
         .catch(error => {
@@ -345,14 +360,6 @@ const App = () => {
         .doc(movieToDelete.id)
         .delete()
         .then(() => {
-          const updatedMovies = movieData.filter(
-            eachMovie => eachMovie.id !== movieToDelete.id
-          );
-          const updatedTitles = titles.filter(
-            eachTitle => eachTitle !== movieToDelete.title
-          );
-          setMovieData(updatedMovies);
-          setTitles(updatedTitles);
           setMovieToDelete('');
           handleSetActionMessage('Movie successfully deleted!', 'alert');
         })
@@ -360,7 +367,7 @@ const App = () => {
           handleSetActionMessage(`Error removing movie: ${error}`, 'error');
         });
     }
-  }, [movieToDelete, movieData, titles]);
+  }, [movieToDelete]);
 
   function handleAddMovie([movie, year]) {
     setAlreadyAdded(false);
@@ -385,7 +392,6 @@ const App = () => {
               created: firebase.firestore.Timestamp.now(),
               creator: currUser
             };
-            setTitles(titles => [newMovie.title, ...titles]);
             setNewMovieAdded(newMovie);
           } else {
             setNotFound(true);
@@ -403,13 +409,13 @@ const App = () => {
     }
   }
 
-  function handleSetActionMessage(msg, type) {
+  function handleSetActionMessage(msg, type, timer = 2500) {
     setMessageType(type);
     setActionMessage(msg);
     setTimeout(() => {
       setActionMessage('');
       setMessageType(null);
-    }, 2500);
+    }, timer);
   }
 
   async function getFirebaseUserDocId() {
@@ -475,6 +481,42 @@ const App = () => {
     }
   }
 
+  async function handleSignUp(name, email, password) {
+    await firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
+      setSignUpError(`There was an error signing up: ${error}`);
+      setTimeout(() => setSignUpError(''), 2500);
+    })
+    const user = firebase.auth().currentUser;
+    if (user) {
+      user
+      .updateProfile({
+        displayName: name
+      })
+      .then(function() {
+        console.log('success')
+      })
+      user.sendEmailVerification().then(function() {
+        handleSetActionMessage('Welcome! We\'ve sent you an email confirmation!', 'alert', 20000);
+      }).catch(function(error) {
+        setSignUpError(`There was an error signing up: ${error}`);
+        setTimeout(() => setSignUpError(''), 2500);
+      });
+    }
+
+    handleSignOut();
+  };
+  
+  function handleSendPasswordReset(email) {
+    var auth = firebase.auth();
+
+    auth.sendPasswordResetEmail(email).then(function() {
+      handleSetActionMessage('We\'ve sent you a password reset email', 'alert', 4000);
+    }).catch(function(error) {
+      setEmailResetError(`There was an error sending the email: ${error}`);
+      setTimeout(() => setEmailResetError(''), 2500);
+    });
+  }
+
   async function handleSignIn(email, password) {
     await firebase
       .auth()
@@ -484,7 +526,11 @@ const App = () => {
         setTimeout(() => setSignInError(''), 2500);
       });
     const user = firebase.auth().currentUser;
-    if (user) setCurrUser(user.displayName);
+    if (user && user.emailVerified) setCurrUser(user.displayName);
+    else if (user && !user.emailVerified) {
+      setSignInError('You need to confirm your email before you can sign in');
+      setTimeout(() => setSignInError(''), 2500);
+    }
   }
 
   async function handleSignOut() {
@@ -583,11 +629,11 @@ const App = () => {
       />
     </div>
   ) : (
-    <div>
-      <SignIn handleSignInCallback={handleSignIn} signInError={signInError}>
-        Sign In
-      </SignIn>
-    </div>
+    <FormContainer>
+      <SignUpForm handleSignUpCallback={handleSignUp} signUpError={signUpError} />
+      <PasswordResetForm handleEnterEmailCallback={handleSendPasswordReset} emailError={emailResetError}/>
+      <SignInForm handleSignInCallback={handleSignIn} signInError={signInError} />
+    </FormContainer>
   );
 
   const displayUser = currUser ? (
