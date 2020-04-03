@@ -9,7 +9,6 @@ const Title = styled.h4`
 `;
 
 const SignUpText = styled.div`
-  margin-bottom: 10px;
   margin-left: 1rem;
   text-decoration: underline;
   cursor: pointer;
@@ -29,6 +28,7 @@ const Submit = styled.input`
 const TextInput = styled.input`
   height: 3em;
   width: 100%;
+  padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
@@ -44,11 +44,9 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   border: 2px solid black;
-  padding: 2em 2em 0 2em;
-  margin: 0 0 1em 1em;
+  padding: 2rem;
+  margin: 1rem;
   background: darkkhaki;
-  min-width: 200px;
-  max-width: 200px;
 
   @media (max-width: 700px) {
     width: 210px;

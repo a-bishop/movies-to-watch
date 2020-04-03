@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import ToggleContent from './ToggleContent';
+import MyModal from './MyModal';
+import PasswordResetForm from './PasswordResetForm';
 import styled from 'styled-components';
 
 const Title = styled.h4`
@@ -6,14 +9,19 @@ const Title = styled.h4`
   margin-bottom: 0.8em;
 `;
 
+const SignInText = styled.div`
+  margin-right: 1rem;
+  text-decoration: underline;
+  cursor: pointer;
+`;
+
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   border: 2px solid black;
-  margin-left: 1rem;
-  padding: 2em 2em 0 2em;
+  padding: 2rem;
+  margin: 1rem;
   background: lavender;
-  width: 165px;
 
   @media (max-width: 700px) {
     width: 210px;
@@ -34,6 +42,7 @@ const Submit = styled.input`
 const TextInput = styled.input`
   height: 3em;
   width: 100%;
+  padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
@@ -45,7 +54,9 @@ const Error = styled.p`
   color: red;
 `;
 
-const SignIn = ({ handleSignInCallback, signInError }) => {
+const SignIn = ({ passwordReset, passwordResetError, handleSignInCallback, signInError }) => {
+
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -63,28 +74,38 @@ const SignIn = ({ handleSignInCallback, signInError }) => {
   }
 
   return (
-    <Form className="Form" onSubmit={handleSignInCallback}>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-        }}
-      >
-        <Title>Sign in to edit</Title>
-        <span style={{ marginBottom: '1.3em' }}>
-        </span>
-      </div>
-        <label htmlFor="email">Email:</label>
-        <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
-        <div style={{ marginTop: '10px' }}>
-          <label htmlFor="password">Password:</label>
-          <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
-        </div>
-        <Submit className="Submit" onClick={handleSignIn} type="submit" value='Sign In' />
-        <br />
-        <Error>{signInError}</Error>
-    </Form>
+    <ToggleContent
+      toggle={show => <SignInText onClick={show}>Sign In</SignInText>}
+      content={hide => (
+        <MyModal hide={hide} modalDismissedCallback={() => console.log('done')}>
+          <div>
+            <Form className="Form" onSubmit={handleSignInCallback}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                }}
+              >
+                <PasswordResetForm passwordResetCallback={passwordReset} emailError={passwordResetError}/>
+                <Title>Sign in to edit</Title>
+                <span style={{ marginBottom: '1.3em' }}>
+                </span>
+              </div>
+                <label htmlFor="email">Email:</label>
+                <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
+                <div style={{ marginTop: '10px' }}>
+                  <label htmlFor="password">Password:</label>
+                  <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
+                </div>
+                <Submit className="Submit" onClick={handleSignIn} type="submit" value='Sign In' />
+                <br />
+                <Error>{signInError}</Error>
+            </Form>
+          </div>
+      </MyModal>  
+    )}
+  />
   );
 };
 

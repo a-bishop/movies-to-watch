@@ -16,21 +16,22 @@ import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
 import { capitalize, toSearchString, regEx } from './helpers';
-
+import { useMediaQuery } from 'react-responsive';
 
 firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
 
 const Main = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
 `;
 
 const TitleContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  margin: 1em;
+  margin-left: 1em;
+  margin-right: 1em;
 `;
 
 const Title = styled.h2`
@@ -38,13 +39,18 @@ const Title = styled.h2`
 `;
 
 const Sort = styled.div`
-  margin-left: 20px;
+  margin-left: 1rem;
+  margin-right: 1rem;
   margin-top: 10px;
   margin-bottom: 10px;
   padding-top: 0;
   width: 300px;
   display: flex;
   align-items: center;
+
+  @media (max-width: 700px) {
+    width: 100%;
+  }
 `;
 
 const Select = styled.select`
@@ -57,7 +63,7 @@ const Select = styled.select`
   cursor: pointer;
   border: 1px solid black;
   border-radius: 5px;
-  flex-basis: 65%;
+  flex-grow: 2;
 `;
 
 const SignOut = styled.button`
@@ -77,6 +83,7 @@ const LoadMore = styled.div`
   text-align: center;
   margin: 1rem;
   padding: 1rem;
+  width: 100%;
   cursor: pointer;
 `;
 
@@ -159,6 +166,12 @@ const NoWatchListMsg = styled.h4`
 `;
 
 const Flex = styled.div`
+  ${props =>
+    props.isMobile
+      ? css`
+          width: 100%;
+        `
+      : ``}
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -170,27 +183,39 @@ const FlexContainer = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  margin: -10px 0;
+  /* margin: -10px 0;
 
   > * {
     margin: 10px 0;
-  }
+  } */
 `;
 
 const Search = styled.input`
-  margin-right: 2em;
   font-family: Futura;
-  min-width: 200px;
+  padding-left: 0.5rem;
+  ${props =>
+    props.isMobile
+      ? css`
+          width: 100%;
+        `
+      : css`
+          min-width: 200px;
+          margin-right: 0.5rem;
+        `}
   border: 1px solid black;
   height: 2.5em;
 `;
 
 const FormContainer = styled.div`
   display: flex;
-  flex-direction: column;
-`
+  justify-content: flex-start;
+  padding: 0.5rem;
+`;
 
 const App = () => {
+  // const isDesktop = useMediaQuery({ minDeviceWidth: 1224 });
+  const isMobile = useMediaQuery({ maxWidth: 800 });
+
   const [titles, setTitles] = useState([]);
   const [movieData, setMovieData] = useState([]);
   const [notFound, setNotFound] = useState(false);
@@ -201,7 +226,7 @@ const App = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
-  const [emailResetError, setEmailResetError] = useState('');
+  const [passwordResetError, setPasswordResetError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [messageType, setMessageType] = useState(null);
   const [sortSelected, setSortSelected] = useState('');
@@ -229,21 +254,21 @@ const App = () => {
   if (!isLoading) {
     // Only add watchlist data to local storage if movie has
     // been added, to avoid overriding on initial load with empty array
-    if (movieAddedToWatchList)
-      localStorage.setItem('watchList', JSON.stringify(watchList));
+    if (movieAddedToWatchList) localStorage.setItem('watchList', JSON.stringify(watchList));
   }
 
   useEffect(() => {
     let unsubscribe = () => {};
     async function getMovies() {
       unsubscribe = db
-      .collection('movies')
-      .orderBy('created', 'desc')
-      .onSnapshot(querySnapshot => {
+        .collection('movies')
+        .orderBy('created', 'desc')
+        .onSnapshot(querySnapshot => {
           let data = [];
           let movieTitles = [];
           if (!querySnapshot) console.log('error getting movies');
-          else { querySnapshot.forEach(doc => {
+          else {
+            querySnapshot.forEach(doc => {
               const docData = doc.data();
               const id = doc.id;
               const avgRating = getAvgRatings(docData.ratings);
@@ -258,7 +283,6 @@ const App = () => {
     }
 
     async function getUsersAndWatchList() {
-
       if (currUser) {
         let users = [];
         let watchListData = [];
@@ -282,9 +306,9 @@ const App = () => {
               const displayName = firebase.auth().currentUser.displayName;
               if (users.indexOf(displayName) === -1) {
                 db.collection('users')
-                .add({ displayName })
-                .then(users.push(displayName))
-                .catch(e => console.log(e))
+                  .add({ displayName })
+                  .then(users.push(displayName))
+                  .catch(e => console.log(e));
               }
             }
             setUsers(users);
@@ -296,13 +320,11 @@ const App = () => {
     getMovies()
       .then(getUsersAndWatchList())
       .then(setIsLoading(false))
-      .catch(error =>
-        console.log('Error retrieving movies or user data', error)
-      );
+      .catch(error => console.log('Error retrieving movies or user data', error));
 
     return () => {
-      unsubscribe()
-    }
+      unsubscribe();
+    };
   }, [currUser]);
 
   // Gets the average rating from ratings systems
@@ -330,7 +352,7 @@ const App = () => {
         ratings,
         poster,
         created,
-        creator
+        creator,
       } = newMovieAdded;
       db.collection('movies')
         .add({
@@ -343,7 +365,7 @@ const App = () => {
           ratings,
           poster,
           created,
-          creator
+          creator,
         })
         .then(() => {
           handleSetActionMessage('Movie Added!', 'alert');
@@ -373,9 +395,9 @@ const App = () => {
     setAlreadyAdded(false);
     setNotFound(false);
     if (!titles.includes(capitalize(movie))) {
-      const url = `https://www.omdbapi.com/?t=${toSearchString(
-        movie
-      )}&y=${year}&plot=full&apikey=${config.OMDB_KEY}`;
+      const url = `https://www.omdbapi.com/?t=${toSearchString(movie)}&y=${year}&plot=full&apikey=${
+        config.OMDB_KEY
+      }`;
       fetch(url)
         .then(res => res.json())
         .then(json => {
@@ -390,7 +412,7 @@ const App = () => {
               ratings: json.Ratings,
               poster: json.Poster,
               created: firebase.firestore.Timestamp.now(),
-              creator: currUser
+              creator: currUser,
             };
             setNewMovieAdded(newMovie);
           } else {
@@ -451,19 +473,13 @@ const App = () => {
       newWatchList.push(event.title);
       setWatchList(newWatchList);
       setMovieAddedToWatchList(true);
-      handleSetActionMessage(
-        `${event.title} was added to your watchlist!`,
-        'alert'
-      );
+      handleSetActionMessage(`${event.title} was added to your watchlist!`, 'alert');
       if (currUser !== 'Guest') {
         const id = await getFirebaseUserDocId();
         await updateFirebaseWatchList(id, newWatchList);
       }
     } else {
-      handleSetActionMessage(
-        `${event.title} is already in your watchlist!`,
-        'warn'
-      );
+      handleSetActionMessage(`${event.title} is already in your watchlist!`, 'warn');
     }
   }
 
@@ -471,10 +487,7 @@ const App = () => {
     const watchListCopy = watchList;
     const movies = watchListCopy.filter(movie => movie !== event.title);
     setWatchList(movies);
-    handleSetActionMessage(
-      `${event.title} has been removed from your watchlist!`,
-      'warn'
-    );
+    handleSetActionMessage(`${event.title} has been removed from your watchlist!`, 'warn');
     if (currUser !== 'Guest') {
       const id = await getFirebaseUserDocId();
       await updateFirebaseWatchList(id, movies);
@@ -482,39 +495,48 @@ const App = () => {
   }
 
   async function handleSignUp(name, email, password) {
-    await firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
-      setSignUpError(`There was an error signing up: ${error}`);
-      setTimeout(() => setSignUpError(''), 2500);
-    })
-    const user = firebase.auth().currentUser;
-    if (user) {
-      user
-      .updateProfile({
-        displayName: name
-      })
-      .then(function() {
-        console.log('success')
-      })
-      user.sendEmailVerification().then(function() {
-        handleSetActionMessage('Welcome! We\'ve sent you an email confirmation!', 'alert', 20000);
-      }).catch(function(error) {
+    await firebase
+      .auth()
+      .createUserWithEmailAndPassword(email, password)
+      .catch(function(error) {
         setSignUpError(`There was an error signing up: ${error}`);
         setTimeout(() => setSignUpError(''), 2500);
       });
+    const user = firebase.auth().currentUser;
+    if (user) {
+      user
+        .updateProfile({
+          displayName: name,
+        })
+        .then(function() {
+          console.log('success');
+        });
+      user
+        .sendEmailVerification()
+        .then(function() {
+          handleSetActionMessage("Welcome! We've sent you an email confirmation!", 'alert', 20000);
+        })
+        .catch(function(error) {
+          setSignUpError(`There was an error signing up: ${error}`);
+          setTimeout(() => setSignUpError(''), 2500);
+        });
     }
 
     handleSignOut();
-  };
-  
+  }
+
   function handleSendPasswordReset(email) {
     var auth = firebase.auth();
 
-    auth.sendPasswordResetEmail(email).then(function() {
-      handleSetActionMessage('We\'ve sent you a password reset email', 'alert', 4000);
-    }).catch(function(error) {
-      setEmailResetError(`There was an error sending the email: ${error}`);
-      setTimeout(() => setEmailResetError(''), 2500);
-    });
+    auth
+      .sendPasswordResetEmail(email)
+      .then(function() {
+        handleSetActionMessage("We've sent you a password reset email", 'alert', 4000);
+      })
+      .catch(function(error) {
+        setPasswordResetError(`There was an error sending the email: ${error}`);
+        setTimeout(() => setPasswordResetError(''), 2500);
+      });
   }
 
   async function handleSignIn(email, password) {
@@ -550,9 +572,7 @@ const App = () => {
     let movieDataCopy = [...movieData];
     switch (sortSelected) {
       case 'dateAdded':
-        movieDataCopy.sort((a, b) =>
-          a.created.seconds > b.created.seconds ? -1 : 1
-        );
+        movieDataCopy.sort((a, b) => (a.created.seconds > b.created.seconds ? -1 : 1));
         setMovieData(movieDataCopy);
         break;
       case 'releaseYear':
@@ -564,9 +584,7 @@ const App = () => {
         setMovieData(movieDataCopy);
         break;
       case 'avgRating':
-        movieDataCopy.sort((a, b) =>
-          parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1
-        );
+        movieDataCopy.sort((a, b) => (parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1));
         setMovieData(movieDataCopy);
         break;
       default:
@@ -605,9 +623,7 @@ const App = () => {
 
   const loadMoreButton =
     !isLoading && limit <= movieData.length && mainData.length > 10 ? (
-      <LoadMore onClick={() => setLimit(limit => limit + 10)}>
-        Load More ...
-      </LoadMore>
+      <LoadMore onClick={() => setLimit(limit => limit + 10)}>Load More ...</LoadMore>
     ) : null;
 
   const message = (
@@ -616,43 +632,37 @@ const App = () => {
     </MessageContainer>
   );
 
-  const signOut = isSignedIn ? (
-    <SignOut onClick={handleSignOut}>Sign Out</SignOut>
-  ) : null;
-
-  const addMovie = isSignedIn ? (
-    <div>
-      <AddMovie
-        handleAddMovieCallback={handleAddMovie}
-        alreadyAdded={alreadyAdded}
-        notFound={notFound}
-      />
-    </div>
-  ) : (
+  const signInSignUpSignOut = isSignedIn? <SignOut onClick={handleSignOut}>Sign Out</SignOut> : (
     <FormContainer>
+      <SignInForm
+        passwordReset={handleSendPasswordReset}
+        passwordResetError={passwordResetError}
+        handleSignInCallback={handleSignIn}
+        signInError={signInError}
+      />
+      or
       <SignUpForm handleSignUpCallback={handleSignUp} signUpError={signUpError} />
-      <PasswordResetForm handleEnterEmailCallback={handleSendPasswordReset} emailError={emailResetError}/>
-      <SignInForm handleSignInCallback={handleSignIn} signInError={signInError} />
     </FormContainer>
   );
 
+  const addMovie = isSignedIn &&
+    <AddMovie
+      handleAddMovieCallback={handleAddMovie}
+      alreadyAdded={alreadyAdded}
+      notFound={notFound}
+    />
+
   const displayUser = currUser ? (
-    <span
-      style={{ fontSize: '.7em', fontWeight: 'normal', whiteSpace: 'nowrap' }}
-    >
+    <span style={{ fontSize: '.7em', fontWeight: 'normal', whiteSpace: 'nowrap' }}>
       &nbsp;Hello, {currUser}
     </span>
   ) : null;
 
   let modalContent = (
-    <NoWatchListMsg>
-      You have not yet added any movies to your watchlist.
-    </NoWatchListMsg>
+    <NoWatchListMsg>You have not yet added any movies to your watchlist.</NoWatchListMsg>
   );
   if (watchList && watchList.length > 0) {
-    const watchListData = movieData.filter(movie =>
-      watchList.includes(movie.title)
-    );
+    const watchListData = movieData.filter(movie => watchList.includes(movie.title));
     modalContent = watchListData.map(movie => (
       <Movie
         key={movie.id}
@@ -667,82 +677,84 @@ const App = () => {
     ));
   }
 
+  const search = isSignedIn && (
+    <Search
+      isMobile={isMobile}
+      type="text"
+      name="Search"
+      placeholder="Search for a movie"
+      onChange={e => setSearchTerm(e.target.value)}
+    />
+  );
+
+  const watchlist = (
+    <ToggleContent
+      toggle={show => (
+        <div onClick={() => setShouldArrowAnimate(true)}>
+          <WatchListContainer onClick={show}>
+            <h4 style={{ margin: '0' }}>My watchlist</h4>
+            <p>
+              <DownArrow animate={shouldArrowAnimate}></DownArrow>
+            </p>
+          </WatchListContainer>
+        </div>
+      )}
+      content={hide => (
+        <MyModal modalDismissedCallback={() => setShouldArrowAnimate(false)} hide={hide}>
+          <ModalContainer>{modalContent}</ModalContainer>
+        </MyModal>
+      )}
+    />
+  );
+
   return (
     <div className="App">
       {message}
-      <TitleContainer>
+      <TitleContainer className="titleContainer">
+        <FlexContainer>
+        {signInSignUpSignOut}
+        {watchlist}
+        </FlexContainer>
         <FlexContainer>
           <Flex>
             <Title data-testid="title">Movies to watch!{displayUser}</Title>
           </Flex>
-          <Flex>
-            <Search
-              type="text"
-              name="Search"
-              placeholder="Search for a movie"
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            <ToggleContent
-              toggle={show => (
-                <div onClick={() => setShouldArrowAnimate(true)}>
-                  <WatchListContainer onClick={show}>
-                    <h4 style={{ margin: '0' }}>My watchlist</h4>
-                    <p>
-                      <DownArrow animate={shouldArrowAnimate}></DownArrow>
-                    </p>
-                  </WatchListContainer>
-                </div>
-              )}
-              content={hide => (
-                <MyModal
-                  modalDismissedCallback={() => setShouldArrowAnimate(false)}
-                  hide={hide}
-                >
-                  <ModalContainer>{modalContent}</ModalContainer>
-                </MyModal>
-              )}
-            />
+          <Flex isMobile={isMobile}>
+            {search}
           </Flex>
         </FlexContainer>
-        {signOut}
       </TitleContainer>
       <Main data-testid="main">
-        {addMovie}
-        <div style={{ flex: '1 1 70%' }}>
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap'
-            }}
-          >
-            <Sort>
-              <SelectMenuTitle data-testid="editorsPicksTitle">
-                Editors' Picks:
-              </SelectMenuTitle>
-              <Select onChange={e => setFilterSelected(e.target.value)}>
-                <option value="">All</option>
-                {users.map(user => (
-                  <option key={user} value={user}>
-                    {user}
-                  </option>
-                ))}
-              </Select>
-            </Sort>
-            <Sort>
-              <SelectMenuTitle data-testid="sortTitle">
-                Sort by:
-              </SelectMenuTitle>
-              <Select onChange={e => setSortSelected(e.target.value)}>
-                <option value="dateAdded">Recently Added</option>
-                <option value="avgRating">Top Rated</option>
-                <option value="releaseYear">Release Year</option>
-                <option value="title">Titles A-Z</option>
-              </Select>
-            </Sort>
-          </div>
-          {currentlyViewing}
-          {loadMoreButton}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Sort>
+            <SelectMenuTitle data-testid="editorsPicksTitle">Editors' Picks:</SelectMenuTitle>
+            <Select onChange={e => setFilterSelected(e.target.value)}>
+              <option value="">All</option>
+              {users.map(user => (
+                <option key={user} value={user}>
+                  {user}
+                </option>
+              ))}
+            </Select>
+          </Sort>
+          <Sort>
+            <SelectMenuTitle data-testid="sortTitle">Sort by:</SelectMenuTitle>
+            <Select onChange={e => setSortSelected(e.target.value)}>
+              <option value="dateAdded">Recently Added</option>
+              <option value="avgRating">Top Rated</option>
+              <option value="releaseYear">Release Year</option>
+              <option value="title">Titles A-Z</option>
+            </Select>
+          </Sort>
         </div>
+        {addMovie}
+        {currentlyViewing}
+        {loadMoreButton}
       </Main>
     </div>
   );

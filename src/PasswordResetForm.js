@@ -11,7 +11,6 @@ const Title = styled.h4`
 const ResetText = styled.div`
   margin-bottom: 10px;
   font-size: 0.8rem;
-  margin-left: 1rem;
   text-decoration: underline;
   cursor: pointer;
 `;
@@ -29,6 +28,7 @@ const Submit = styled.input`
 const TextInput = styled.input`
   height: 3em;
   width: 100%;
+  padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
@@ -55,7 +55,7 @@ const Form = styled.form`
   }
 `;
 
-const PasswordReset = ({ handleEnterEmailCallback, emailError }) => {
+const PasswordReset = ({ passwordResetCallback, emailError }) => {
   const [email, setEmail] = useState('');
 
   function handleSetEmail(e) {
@@ -64,7 +64,7 @@ const PasswordReset = ({ handleEnterEmailCallback, emailError }) => {
 
   function emailSend(e) {
     e.preventDefault();
-    handleEnterEmailCallback(email);
+    passwordResetCallback(email);
   }
 
   return (
@@ -73,7 +73,7 @@ const PasswordReset = ({ handleEnterEmailCallback, emailError }) => {
       content={hide => (
         <MyModal hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
-            <Form className="Form" onSubmit={handleEnterEmailCallback}>
+            <Form className="Form" onSubmit={emailSend}>
               <div
                 style={{
                   display: 'flex',

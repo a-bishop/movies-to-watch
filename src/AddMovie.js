@@ -5,7 +5,6 @@ const Submit = styled.input`
   border: 1px solid black;
   border-radius: 5px;
   background: cornflowerBlue;
-  margin-top: 20px;
   padding: 8px;
   font-size: 1em;
   font-family: Futura;
@@ -13,30 +12,29 @@ const Submit = styled.input`
 `;
 
 const TextInput = styled.input`
+  margin-left: 1rem;
   height: 3em;
+  padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
-  margin-top: 10px;
 `;
 
 const Form = styled.form`
-  border: 2px solid black;
-  padding: 2rem;
-  margin: 1rem 0 1rem 1rem;
+  max-width: 800px;
+  border: 1px solid black;
+  padding: 1rem;
+  margin: 1rem; 
   background: lavender;
-  width: 160px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: center;
 `;
 
 const Error = styled.p`
-  margin-top: 10px;
+  margin: 1rem;
   color: red;
-`;
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  max-width: 250px;
 `;
 
 const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
@@ -74,8 +72,9 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
   }
 
   return (
-    <Container className="Container">
-      <Form onSubmit={handleSubmit}>
+    <>
+    <Form onSubmit={handleSubmit}>
+        <div>
         <label htmlFor="addMovie">Add Movie:</label>
         <TextInput
           type="text"
@@ -83,7 +82,8 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
           onChange={handleSetMovie}
           value={movie}
         />
-        <div style={{ marginTop: "10px" }}>
+        </div>
+        <div >
           <label htmlFor="year">Year (optional):</label>
           <TextInput
             type="text"
@@ -92,11 +92,15 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
             value={year}
           />
         </div>
+        <div>
         <Submit type="submit" value="Submit" />
         <br />
-        {error}
-      </Form>
-    </Container>
+        </div>
+    </Form>
+    <div>
+    {error}
+    </div>
+    </>
   );
 };
 

@@ -16,10 +16,13 @@ const ModalWrapper = styled.div`
   left: 50%;
   transform: translate(-50%, -50%) !important;
   height: calc(100vh - 150px);
-  max-width: 90%;
+  width: 30%;
+  min-width: 350px;
   background-color: white;
   padding: 2em;
   z-index: 2;
+
+  @media
 `;
 
 const ModalFullScreenContainer = styled.div`
