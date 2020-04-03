@@ -9,6 +9,7 @@ const Submit = styled.input`
   font-size: 1em;
   font-family: Futura;
   font-weight: bold;
+  width: 100px;
 `;
 
 const TextInput = styled.input`
@@ -28,14 +29,31 @@ const Form = styled.form`
   background: lavender;
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: space-between;
   align-items: center;
+
+  @media (max-width: 1000px) {
+    display: grid;
+    grid-template-rows: 33% 33% 33%;
+    /* flex-direction: column;
+    align-items: flex-start;
+    width: 350px; */
+  }
 `;
 
 const Error = styled.p`
   margin: 1rem;
   color: red;
 `;
+
+const FlexChild = styled.div`
+  display: grid;
+  grid-template-columns: 40% 60%;
+`
+
+const Label = styled.label`
+  /* width: 600px; */
+`
 
 const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
   const [movie, setMovie] = useState("");
@@ -74,28 +92,26 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
   return (
     <>
     <Form onSubmit={handleSubmit}>
-        <div>
-        <label htmlFor="addMovie">Add Movie:</label>
+        <FlexChild>
+        <Label htmlFor="addMovie">Add Movie:</Label>
         <TextInput
           type="text"
           id="addMovie"
           onChange={handleSetMovie}
           value={movie}
         />
-        </div>
-        <div >
-          <label htmlFor="year">Year (optional):</label>
+        </FlexChild>
+        <FlexChild >
+          <Label htmlFor="year">Year (optional):</Label>
           <TextInput
             type="text"
             id="year"
             onChange={handleSetYear}
             value={year}
           />
-        </div>
-        <div>
+        </FlexChild>
         <Submit type="submit" value="Submit" />
         <br />
-        </div>
     </Form>
     <div>
     {error}
