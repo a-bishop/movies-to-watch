@@ -55,7 +55,7 @@ const Form = styled.form`
   }
 `;
 
-const PasswordReset = ({ passwordResetCallback, emailError }) => {
+const PasswordReset = ({ shouldDismissModal, passwordResetCallback, emailError }) => {
   const [email, setEmail] = useState('');
 
   function handleSetEmail(e) {
@@ -71,7 +71,7 @@ const PasswordReset = ({ passwordResetCallback, emailError }) => {
     <ToggleContent
       toggle={show => <ResetText onClick={show}>Forgot Your Password?</ResetText>}
       content={hide => (
-        <MyModal hide={hide} modalDismissedCallback={() => console.log('done')}>
+        <MyModal override={shouldDismissModal} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
             <Form className="Form" onSubmit={emailSend}>
               <div

@@ -83,7 +83,6 @@ const LoadMore = styled.div`
   text-align: center;
   margin: 1rem;
   padding: 1rem;
-  width: 100%;
   cursor: pointer;
 `;
 
@@ -204,6 +203,7 @@ const Search = styled.input`
         `}
   border: 1px solid black;
   height: 2.5em;
+  margin: 1rem;
 `;
 
 const FormContainer = styled.div`
@@ -238,6 +238,7 @@ const App = () => {
   const [movieAddedToWatchList, setMovieAddedToWatchList] = useState(false);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [shouldDismissModal, setShouldDismissModal] = useState(false);
 
   firebase.auth().onAuthStateChanged(user => {
     const currentUser = firebase.auth().currentUser;
@@ -514,7 +515,9 @@ const App = () => {
       user
         .sendEmailVerification()
         .then(function() {
-          handleSetActionMessage("Welcome! We've sent you an email confirmation!", 'alert', 20000);
+          handleSetActionMessage("Welcome! We've sent you an email confirmation!", 'alert', 5000);
+          setShouldDismissModal(true);
+          setShouldDismissModal(false);
         })
         .catch(function(error) {
           setSignUpError(`There was an error signing up: ${error}`);
@@ -531,7 +534,9 @@ const App = () => {
     auth
       .sendPasswordResetEmail(email)
       .then(function() {
-        handleSetActionMessage("We've sent you a password reset email", 'alert', 4000);
+        handleSetActionMessage("We've sent you a password reset email", 'alert', 5000);
+        setShouldDismissModal(true);
+        setShouldDismissModal(false);
       })
       .catch(function(error) {
         setPasswordResetError(`There was an error sending the email: ${error}`);
@@ -548,7 +553,11 @@ const App = () => {
         setTimeout(() => setSignInError(''), 2500);
       });
     const user = firebase.auth().currentUser;
-    if (user && user.emailVerified) setCurrUser(user.displayName);
+    if (user && user.emailVerified) {
+      setCurrUser(user.displayName);
+      setShouldDismissModal(true);
+      setShouldDismissModal(false);
+    }
     else if (user && !user.emailVerified) {
       setSignInError('You need to confirm your email before you can sign in');
       setTimeout(() => setSignInError(''), 2500);
@@ -639,9 +648,10 @@ const App = () => {
         passwordResetError={passwordResetError}
         handleSignInCallback={handleSignIn}
         signInError={signInError}
+        modalDismiss={shouldDismissModal}
       />
       or
-      <SignUpForm handleSignUpCallback={handleSignUp} signUpError={signUpError} />
+      <SignUpForm modalDismiss={shouldDismissModal} handleSignUpCallback={handleSignUp} signUpError={signUpError} />
     </FormContainer>
   );
 
@@ -700,7 +710,7 @@ const App = () => {
         </div>
       )}
       content={hide => (
-        <MyModal modalDismissedCallback={() => setShouldArrowAnimate(false)} hide={hide}>
+        <MyModal modalDismissedCallback={() => setShouldArrowAnimate(false)} hide={hide} override={shouldDismissModal}>
           <ModalContainer>{modalContent}</ModalContainer>
         </MyModal>
       )}
@@ -709,28 +719,17 @@ const App = () => {
 
   return (
     <div className="App">
-      {message}
-      <TitleContainer className="titleContainer">
+    {message}
+    <TitleContainer className="titleContainer">
         <FlexContainer>
         {signInSignUpSignOut}
+        {search}
         {watchlist}
         </FlexContainer>
         <FlexContainer>
           <Flex>
             <Title data-testid="title">Movies to watch!{displayUser}</Title>
           </Flex>
-          <Flex isMobile={isMobile}>
-            {search}
-          </Flex>
-        </FlexContainer>
-      </TitleContainer>
-      <Main data-testid="main">
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-          }}
-        >
           <Sort>
             <SelectMenuTitle data-testid="editorsPicksTitle">Editors' Picks:</SelectMenuTitle>
             <Select onChange={e => setFilterSelected(e.target.value)}>
@@ -751,7 +750,9 @@ const App = () => {
               <option value="title">Titles A-Z</option>
             </Select>
           </Sort>
-        </div>
+        </FlexContainer>
+      </TitleContainer>
+      <Main data-testid="main">
         {addMovie}
         {currentlyViewing}
         {loadMoreButton}

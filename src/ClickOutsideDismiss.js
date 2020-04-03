@@ -1,7 +1,15 @@
 import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-function useClickOutsideDismiss(ref, dismiss, callback) {
+function useClickOutsideDismiss(ref, dismiss, callback, override) {
+
+  useEffect(() => {
+    if (override) {
+      dismiss();
+      callback();
+    }
+  }, [override, callback, dismiss])
+
   function handleClickOutside(event) {
     const className = event.target.className;
     if (
@@ -29,7 +37,8 @@ function ClickOutsideDismiss(props) {
   useClickOutsideDismiss(
     wrapperRef,
     props.dismiss,
-    props.modalDismissedCallback
+    props.modalDismissedCallback,
+    props.override
   );
 
   return <div ref={wrapperRef}>{props.children}</div>;

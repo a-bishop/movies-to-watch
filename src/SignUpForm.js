@@ -53,7 +53,7 @@ const Form = styled.form`
   }
 `;
 
-const SignUp = ({ handleSignUpCallback, signUpError }) => {
+const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -79,7 +79,7 @@ const SignUp = ({ handleSignUpCallback, signUpError }) => {
     <ToggleContent
       toggle={show => <SignUpText onClick={show}>Sign Up</SignUpText>}
       content={hide => (
-        <MyModal hide={hide} modalDismissedCallback={() => console.log('done')}>
+        <MyModal override={modalDismiss} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
             <Form className="Form" onSubmit={handleSignUpCallback}>
               <div

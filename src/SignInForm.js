@@ -54,7 +54,7 @@ const Error = styled.p`
   color: red;
 `;
 
-const SignIn = ({ passwordReset, passwordResetError, handleSignInCallback, signInError }) => {
+const SignIn = ({ modalDismiss, passwordReset, passwordResetError, handleSignInCallback, signInError }) => {
 
 
   const [email, setEmail] = useState('');
@@ -77,7 +77,7 @@ const SignIn = ({ passwordReset, passwordResetError, handleSignInCallback, signI
     <ToggleContent
       toggle={show => <SignInText onClick={show}>Sign In</SignInText>}
       content={hide => (
-        <MyModal hide={hide} modalDismissedCallback={() => console.log('done')}>
+        <MyModal override={modalDismiss} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
             <Form className="Form" onSubmit={handleSignInCallback}>
               <div
@@ -87,7 +87,7 @@ const SignIn = ({ passwordReset, passwordResetError, handleSignInCallback, signI
                   alignItems: 'flex-start',
                 }}
               >
-                <PasswordResetForm passwordResetCallback={passwordReset} emailError={passwordResetError}/>
+                <PasswordResetForm shouldDismissModal={modalDismiss} passwordResetCallback={passwordReset} emailError={passwordResetError}/>
                 <Title>Sign in to edit</Title>
                 <span style={{ marginBottom: '1.3em' }}>
                 </span>

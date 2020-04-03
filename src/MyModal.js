@@ -21,8 +21,6 @@ const ModalWrapper = styled.div`
   background-color: white;
   padding: 2em;
   z-index: 2;
-
-  @media
 `;
 
 const ModalFullScreenContainer = styled.div`
@@ -49,6 +47,7 @@ const MyModal = props =>
     <ClickOutsideDismiss
       dismiss={props.hide}
       modalDismissedCallback={props.modalDismissedCallback}
+      override={props.override}
     >
       <ModalFullScreenContainer className="modalContainer">
         <ModalWrapper>
