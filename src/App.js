@@ -242,7 +242,6 @@ const App = () => {
 
   firebase.auth().onAuthStateChanged(user => {
     const currentUser = firebase.auth().currentUser;
-    console.log(currentUser);
     if (user && user.emailVerified) {
       setIsSignedIn(true);
       setCurrUser(currentUser.displayName);
