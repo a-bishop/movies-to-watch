@@ -283,6 +283,9 @@ const App = () => {
     }
 
     async function getUsersAndWatchList() {
+
+      const hasAddedAMovie = (displayName) => movieData.find(movie => movie.creator === displayName);
+
       if (currUser) {
         let users = [];
         let watchListData = [];
@@ -295,7 +298,7 @@ const App = () => {
           .then(querySnapshot => {
             querySnapshot.forEach(user => {
               const data = user.data();
-              users.push(data.displayName);
+              if (hasAddedAMovie(data.displayName)) users.push(data.displayName);
               if (currUser === data.displayName) {
                 if (data.watchList) {
                   data.watchList.forEach(movie => watchListData.push(movie));
@@ -307,8 +310,9 @@ const App = () => {
               if (users.indexOf(displayName) === -1) {
                 db.collection('users')
                   .add({ displayName })
-                  .then(users.push(displayName))
-                  .catch(e => console.log(e));
+                  .then(() => {
+                    if (hasAddedAMovie(displayName)) users.push(displayName);
+                  }).catch(e => console.log(e));
               }
             }
             setUsers(users);
@@ -325,7 +329,7 @@ const App = () => {
     return () => {
       unsubscribe();
     };
-  }, [currUser]);
+  }, [currUser, movieData]);
 
   // Gets the average rating from ratings systems
   // ie. IMdB, Rotten Tomatoes and Metacritic
