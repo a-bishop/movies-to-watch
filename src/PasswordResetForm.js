@@ -47,12 +47,6 @@ const Form = styled.form`
   padding: 2em 2em 0 2em;
   margin: 0 0 1em 1em;
   background: darkkhaki;
-  min-width: 200px;
-  max-width: 200px;
-
-  @media (max-width: 700px) {
-    width: 210px;
-  }
 `;
 
 const PasswordReset = ({ shouldDismissModal, passwordResetCallback, emailError }) => {

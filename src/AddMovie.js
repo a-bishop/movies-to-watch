@@ -14,7 +14,7 @@ const Submit = styled.input`
 
 const TextInput = styled.input`
   margin-left: 1rem;
-  height: 3em;
+  height: 2rem;
   padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
@@ -22,23 +22,13 @@ const TextInput = styled.input`
 `;
 
 const Form = styled.form`
-  max-width: 800px;
   border: 1px solid black;
   padding: 1rem;
-  margin: 1rem; 
   background: lavender;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-
-  @media (max-width: 1000px) {
-    display: grid;
-    grid-template-rows: 33% 33% 33%;
-    /* flex-direction: column;
-    align-items: flex-start;
-    width: 350px; */
-  }
+  max-width: 400px;
+  margin: 1rem; 
+  display: grid;
+  grid-gap: 10px;
 `;
 
 const Error = styled.p`
@@ -110,8 +100,9 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
             value={year}
           />
         </FlexChild>
+        <FlexChild >
         <Submit type="submit" value="Submit" />
-        <br />
+        </FlexChild>
     </Form>
     <div>
     {error}

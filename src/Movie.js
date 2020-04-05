@@ -27,6 +27,10 @@ const AddToWatchlist = styled(Button)`
 `;
 
 const PosterContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
   position: relative;
   flex-basis: 1 1 45%;
   padding: 0 10px 0 10px;
@@ -57,6 +61,15 @@ const Overlay = styled.div`
   padding: 20px;
   text-align: center;
 `;
+
+const WatchTrailerText = styled.p`
+  text-decoration: underline;
+`
+
+const YouTubeLink = styled.a`
+  text-decoration: none;
+  color: black;
+`
 
 const Movie = ({
   className,
@@ -123,12 +136,13 @@ const Movie = ({
 
   const posterImg =
     poster !== 'N/A' ? (
-      <PosterContainer>
-        <a href={createYoutubeSearchLink()}>
+      <YouTubeLink href={createYoutubeSearchLink()}>
+        <PosterContainer>
           <Poster className="poster" alt={title} src={poster} width="180" />
           <Overlay className="overlay">Watch trailer</Overlay>
-        </a>
-      </PosterContainer>
+          <WatchTrailerText>Watch trailer</WatchTrailerText>
+        </PosterContainer>
+      </YouTubeLink>
     ) : null;
 
   return (

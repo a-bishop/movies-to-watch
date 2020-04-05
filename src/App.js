@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-// import _ from 'lodash';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
 import firebase from 'firebase/app';
@@ -14,8 +13,8 @@ import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
+import testData from './test-data';
 import { capitalize, toSearchString, regEx } from './helpers';
-import { useMediaQuery } from 'react-responsive';
 
 firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
@@ -35,11 +34,10 @@ const TitleContainer = styled.div`
 
 const Title = styled.h2`
   margin: 0;
+  margin-right: 20px;
 `;
 
 const Sort = styled.div`
-  margin-left: 1rem;
-  margin-right: 1rem;
   margin-top: 10px;
   margin-bottom: 10px;
   padding-top: 0;
@@ -66,10 +64,10 @@ const Select = styled.select`
 `;
 
 const SignOut = styled.button`
+  flex: 1;
   border: 1px solid black;
   border-radius: 5px;
   background: mistyRose;
-  margin-top: 10px;
   padding: 8px;
   width: 90px;
   font-size: 0.8em;
@@ -154,7 +152,7 @@ const MessageContainer = styled.div`
       `;
     }
   }}
-  @media only screen and (max-width: 500px) {
+  @media only screen and (max-width: 700px) {
     width: 80%;
   }
 `;
@@ -164,45 +162,35 @@ const NoWatchListMsg = styled.h4`
 `;
 
 const Flex = styled.div`
-  ${props =>
-    props.isMobile
-      ? css`
-          width: 100%;
-        `
-      : ``}
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
 `;
 
-const FlexContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  /* margin: -10px 0;
+const SortFlex = styled(Flex)`
+  justify-content: space-around;
+  flex: 1.5;
+`
 
-  > * {
-    margin: 10px 0;
-  } */
+const FlexHeaderSignedIn = styled(Flex)`
+  flex-wrap: nowrap;
+  @media only screen and (max-width: 700px) {
+    min-width:100%;
+  }
 `;
 
 const Search = styled.input`
+  flex: 2;
   font-family: Futura;
   padding-left: 0.5rem;
-  ${props =>
-    props.isMobile
-      ? css`
-          width: 100%;
-        `
-      : css`
-          min-width: 200px;
-          margin-right: 0.5rem;
-        `}
+  margin-right: 0.5rem;
   border: 1px solid black;
-  height: 2.5em;
+  height: 2.5rem;
   margin: 1rem;
+  @media only screen and (min-width: 700px) {
+    min-width: 400px;
+  }
 `;
 
 const FormContainer = styled.div`
@@ -211,19 +199,24 @@ const FormContainer = styled.div`
   padding: 0.5rem;
 `;
 
+const WelcomeMsg = styled.span`
+  font-weight: 'normal';
+  white-space: 'nowrap';
+  margin-right: 10px;
+`
+
 let renderCount = 0;
+const env = process.env.NODE_ENV;
 
 const App = () => {
-  // const isDesktop = useMediaQuery({ minDeviceWidth: 1224 });
-  const isMobile = useMediaQuery({ maxWidth: 800 });
 
   const [titles, setTitles] = useState([]);
-  const [movieData, setMovieData] = useState([]);
+  const [movieData, setMovieData] = useState(env === 'development' ? testData : []);
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState('');
   const [movieToDelete, setMovieToDelete] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(env === 'development' ? false : true);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
@@ -262,87 +255,84 @@ const App = () => {
     if (movieAddedToWatchList) localStorage.setItem('watchList', JSON.stringify(watchList));
   }
 
-  // const increment = firebase.firestore.FieldValue.increment(1);
-  // const decrement = firebase.firestore.FieldValue.increment(-1);
-
-  // const batch = db.batch();
-  // batch.set(docRef, { count: increment }, { merge: true });
-  // batch.commit();
-
   useEffect(() => {
-    let unsubscribe = () => {};
-    async function getMovies() {
-      unsubscribe = db
-        .collection('movies')
-        .orderBy('created', 'desc')
-        .onSnapshot(querySnapshot => {
-          let data = [];
-          let movieTitles = [];
-          if (!querySnapshot) console.log('error getting movies');
-          else {
-            querySnapshot.forEach(doc => {
-              const docData = doc.data();
-              const id = doc.id;
-              const avgRating = getAvgRatings(docData.ratings);
-              const allData = { ...docData, id, avgRating };
-              data.push(allData);
-              movieTitles.push(docData.title);
-            });
-            setMovieData(data);
-            setTitles(movieTitles);
-          }
-        });
+    if (env !== 'development') {
+      let unsubscribe = () => {};
+      async function getMovies() {
+        unsubscribe = db
+          .collection('movies')
+          .orderBy('created', 'desc')
+          .onSnapshot(querySnapshot => {
+            let data = [];
+            let movieTitles = [];
+            if (!querySnapshot) console.log('error getting movies');
+            else {
+              querySnapshot.forEach(doc => {
+                const docData = doc.data();
+                const id = doc.id;
+                const avgRating = getAvgRatings(docData.ratings);
+                const allData = { ...docData, id, avgRating };
+                data.push(allData);
+                movieTitles.push(docData.title);
+              });
+              setMovieData(data);
+              setTitles(movieTitles);
+            }
+          });
+      }
+
+      getMovies();
+
+      return () => {
+        unsubscribe();
+      };
     }
-
-    getMovies();
-
-    return () => {
-      unsubscribe();
-    };
   }, []);
 
   useEffect(() => {
-    async function getUsersAndWatchList() {
-      if (currUser) {
-        let users = [];
-        let watchListData = [];
-        if (currUser === 'Guest') {
-          watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
-        }
-        await db
-          .collection('users')
-          .get()
-          .then(querySnapshot => {
-            querySnapshot.forEach(user => {
-              const data = user.data();
-              if (data.isActive) users.push(data.displayName);
-              if (currUser === data.displayName) {
-                setFirebaseUserId(user.id);
-                if (data.watchList) {
-                  data.watchList.forEach(movie => watchListData.push(movie));
+    if (env !== 'development') {
+      async function getUsersAndWatchList() {
+        if (currUser) {
+          let users = [];
+          let watchListData = [];
+          if (currUser === 'Guest') {
+            watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
+          }
+          await db
+            .collection('users')
+            .get()
+            .then(querySnapshot => {
+              querySnapshot.forEach(user => {
+                const data = user.data();
+                if (data.isActive) users.push(data.displayName);
+                if (currUser === data.displayName) {
+                  setFirebaseUserId(user.id);
+                  if (data.watchList) {
+                    data.watchList.forEach(movie => watchListData.push(movie));
+                  }
+                }
+              });
+              if (currUser !== 'Guest') {
+                const displayName = firebase.auth().currentUser.displayName;
+                if (users.indexOf(displayName) === -1) {
+                  db.collection('users')
+                    .add({ displayName })
+                    .then((docRef) => {
+                      setFirebaseUserId(docRef.id);
+                    })
+                    .catch(e => console.log(e));
                 }
               }
+              setUsers(users);
+              setWatchList(watchListData);
             });
-            if (currUser !== 'Guest') {
-              const displayName = firebase.auth().currentUser.displayName;
-              if (users.indexOf(displayName) === -1) {
-                db.collection('users')
-                  .add({ displayName })
-                  .then((docRef) => {
-                    setFirebaseUserId(docRef.id);
-                  })
-                  .catch(e => console.log(e));
-              }
-            }
-            setUsers(users);
-            setWatchList(watchListData);
-          });
+        }
       }
-    }
 
-      getUsersAndWatchList()
-      .then(setIsLoading(false))
-      .catch(error => console.log('Error retrieving user data', error));
+        getUsersAndWatchList()
+        .then(setIsLoading(false))
+        .catch(error => console.log('Error retrieving user data', error));
+    }
   }, [currUser]);
 
   // Gets the average rating from ratings systems
@@ -518,7 +508,6 @@ const App = () => {
     const watchListCopy = watchList;
     const movies = watchListCopy.filter(movie => movie !== event.title);
     setWatchList(movies);
-    handleSetActionMessage(`${event.title} has been removed from your watchlist!`, 'warn');
     if (currUser !== 'Guest') {
       if (!firebaseUserId) await getFirebaseUserDocId();
         await updateFirebaseWatchList(firebaseUserId, movies);
@@ -526,6 +515,21 @@ const App = () => {
   }
 
   async function handleSignUp(name, email, password) {
+    let userNameExists = false;
+    await db.collection("users").where("displayName", "==", name).limit(1)
+      .get()
+      .then(function(snap) {
+        snap.forEach(doc => {
+          if (doc.exists) {
+            userNameExists = true;
+            setSignUpError(`This user name already exists!`);
+            setTimeout(() => setSignUpError(''), 2500);
+          }
+        })
+      }).catch(function(error) {
+        console.log("Error getting document:", error);
+      });
+    if (userNameExists) return;
     await firebase
       .auth()
       .createUserWithEmailAndPassword(email, password)
@@ -671,7 +675,18 @@ const App = () => {
     </MessageContainer>
   );
 
-  const signInSignUpSignOut = isSignedIn? <SignOut onClick={handleSignOut}>Sign Out</SignOut> : (
+  const signInSignUpSignOutSearch = isSignedIn? (
+    <FlexHeaderSignedIn>
+      <SignOut onClick={handleSignOut}>Sign Out</SignOut> 
+      <Search
+        type="text"
+        name="Search"
+        placeholder="Search the site for a movie title"
+        onChange={e => setSearchTerm(e.target.value)}
+      />
+    </FlexHeaderSignedIn>
+    )
+    : (
     <FormContainer>
       <SignInForm
         passwordReset={handleSendPasswordReset}
@@ -692,10 +707,10 @@ const App = () => {
       notFound={notFound}
     />
 
-  const displayUser = currUser ? (
-    <span style={{ fontSize: '.7em', fontWeight: 'normal', whiteSpace: 'nowrap' }}>
+  const displayUser = currUser && currUser !== 'Guest' ? (
+    <WelcomeMsg>
       &nbsp;Hello, {currUser}
-    </span>
+    </WelcomeMsg>
   ) : null;
 
   let modalContent = (
@@ -716,16 +731,6 @@ const App = () => {
       ></Movie>
     ));
   }
-
-  const search = isSignedIn && (
-    <Search
-      isMobile={isMobile}
-      type="text"
-      name="Search"
-      placeholder="Search for a movie"
-      onChange={e => setSearchTerm(e.target.value)}
-    />
-  );
 
   const watchlist = (
     <ToggleContent
@@ -751,36 +756,40 @@ const App = () => {
     <div className="App">
     {message}
     <TitleContainer className="titleContainer">
-        <FlexContainer>
-        {signInSignUpSignOut}
-        {search}
-        {watchlist}
-        </FlexContainer>
-        <FlexContainer>
+        <Flex>
+        {signInSignUpSignOutSearch}
           <Flex>
-            <Title data-testid="title">Movies to watch!{displayUser}</Title>
+            {displayUser}
+            {watchlist}
           </Flex>
-          <Sort>
-            <SelectMenuTitle data-testid="editorsPicksTitle">Editors' Picks:</SelectMenuTitle>
-            <Select onChange={e => setFilterSelected(e.target.value)}>
-              <option value="">All</option>
-              {users.map(user => (
-                <option key={user} value={user}>
-                  {user}
-                </option>
-              ))}
-            </Select>
-          </Sort>
-          <Sort>
-            <SelectMenuTitle data-testid="sortTitle">Sort by:</SelectMenuTitle>
-            <Select onChange={e => setSortSelected(e.target.value)}>
-              <option value="dateAdded">Recently Added</option>
-              <option value="avgRating">Top Rated</option>
-              <option value="releaseYear">Release Year</option>
-              <option value="title">Titles A-Z</option>
-            </Select>
-          </Sort>
-        </FlexContainer>
+        </Flex>
+        <Flex>
+          <Flex>
+            <Title data-testid="title">Movies to watch!</Title>
+          </Flex>
+            <SortFlex>
+              <Sort>
+                <SelectMenuTitle data-testid="editorsPicksTitle">Editors' Picks:</SelectMenuTitle>
+                <Select onChange={e => setFilterSelected(e.target.value)}>
+                  <option value="">All</option>
+                  {users.map(user => (
+                    <option key={user} value={user}>
+                      {user}
+                    </option>
+                  ))}
+                </Select>
+              </Sort>
+              <Sort>
+                <SelectMenuTitle data-testid="sortTitle">Sort by:</SelectMenuTitle>
+                <Select onChange={e => setSortSelected(e.target.value)}>
+                  <option value="dateAdded">Recently Added</option>
+                  <option value="avgRating">Top Rated</option>
+                  <option value="releaseYear">Release Year</option>
+                  <option value="title">Titles A-Z</option>
+                </Select>
+              </Sort>
+            </SortFlex>
+        </Flex>
       </TitleContainer>
       <Main data-testid="main">
         {addMovie}

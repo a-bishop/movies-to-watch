@@ -22,10 +22,6 @@ const Form = styled.form`
   padding: 2rem;
   margin: 1rem;
   background: lavender;
-
-  @media (max-width: 700px) {
-    width: 210px;
-  }
 `;
 
 const Submit = styled.input`

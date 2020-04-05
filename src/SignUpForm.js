@@ -47,10 +47,6 @@ const Form = styled.form`
   padding: 2rem;
   margin: 1rem;
   background: darkkhaki;
-
-  @media (max-width: 700px) {
-    width: 210px;
-  }
 `;
 
 const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
@@ -91,7 +87,7 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
               >
                 <Title>Sign up</Title>
               </div>
-              <label htmlFor="email">Name:</label>
+              <label htmlFor="email">Choose a User Name (Ideally your first name):</label>
               <TextInput type="name" id="name" onChange={handleSetName} value={name} />
               <div style={{ marginTop: '10px' }}>
               <label htmlFor="email">Email:</label>
