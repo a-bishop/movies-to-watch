@@ -276,11 +276,12 @@ const App = () => {
               });
               setMovieData(data);
               setTitles(movieTitles);
+              setIsLoading(false);
             }
           });
       }
 
-      getMovies();
+      getMovies()
 
       return () => {
         unsubscribe();
@@ -329,7 +330,6 @@ const App = () => {
       }
 
         getUsersAndWatchList()
-        .then(setIsLoading(false))
         .catch(error => console.log('Error retrieving user data', error));
     // }
   }, [currUser]);
