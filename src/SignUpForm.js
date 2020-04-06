@@ -17,7 +17,7 @@ const SignUpText = styled.div`
 const Submit = styled.input`
   border: 1px solid black;
   border-radius: 5px;
-  width: 40%;
+  width: 50%;
   background: papayawhip;
   padding: 8px;
   font-size: 1rem;
@@ -26,7 +26,7 @@ const Submit = styled.input`
 `;
 
 const TextInput = styled.input`
-  height: 2rem;
+  height: 18px;
   width: 100%;
   padding: 0.5rem;
   border: 1px solid black;
@@ -97,7 +97,7 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
                 <label htmlFor="password">Choose a Password:</label>
                 <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
               </div>
-              <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Me Up!" />
+              <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!" />
               <br />
               <Error>{signUpError}</Error>
             </Form>

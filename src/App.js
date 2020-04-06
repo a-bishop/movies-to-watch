@@ -521,7 +521,7 @@ const App = () => {
   async function handleSignUp(name, email, password) {
     let userNameExists = false;
     if ((name.length) < 3) {
-      setSignUpError(`You need a user name of at least three letters`);
+      setSignUpError(`Your name needs to be at least three letters`);
       setTimeout(() => setSignUpError(''), 2500);
       return;
     }
@@ -531,7 +531,7 @@ const App = () => {
         snap.forEach(doc => {
           if (doc.exists) {
             userNameExists = true;
-            setSignUpError(`This user name already exists!`);
+            setSignUpError(`Please add your last initial to your name. A user with your name already exists!`);
             setTimeout(() => setSignUpError(''), 2500);
           }
         })
