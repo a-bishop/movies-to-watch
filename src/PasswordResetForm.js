@@ -26,7 +26,7 @@ const Submit = styled.input`
 `;
 
 const TextInput = styled.input`
-  height: 3em;
+  height: 2rem;
   width: 100%;
   padding: 0.5rem;
   border: 1px solid black;
@@ -36,7 +36,7 @@ const TextInput = styled.input`
 `;
 
 const Error = styled.p`
-  margin-top: 10px;
+  margin: 0;
   color: red;
 `;
 

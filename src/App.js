@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
+import testData from './test-data';
 import firebase from 'firebase/app';
 import config from './config';
 import 'firebase/firestore';
@@ -205,17 +206,17 @@ const WelcomeMsg = styled.span`
 `
 
 let renderCount = 0;
-// const env = process.env.NODE_ENV;
+const env = process.env.NODE_ENV;
 
 const App = () => {
 
   const [titles, setTitles] = useState([]);
-  const [movieData, setMovieData] = useState([]); //env === 'development' ? testData : 
+  const [movieData, setMovieData] = useState(env === 'development' ? testData : []); //env === 'development' ? testData : 
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState('');
   const [movieToDelete, setMovieToDelete] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // env === 'development' ? false : 
+  const [isLoading, setIsLoading] = useState(env === 'development' ? false : true); // env === 'development' ? false : 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
@@ -255,7 +256,7 @@ const App = () => {
   }
 
   useEffect(() => {
-    // if (env !== 'development') {
+    if (env !== 'development') {
       let unsubscribe = () => {};
       async function getMovies() {
         unsubscribe = db
@@ -286,11 +287,11 @@ const App = () => {
       return () => {
         unsubscribe();
       };
-    // }
+    }
   }, []);
 
   useEffect(() => {
-    // if (env !== 'development') {
+    if (env !== 'development') {
       async function getUsersAndWatchList() {
         if (currUser) {
           let users = [];
@@ -331,7 +332,7 @@ const App = () => {
 
         getUsersAndWatchList()
         .catch(error => console.log('Error retrieving user data', error));
-    // }
+    }
   }, [currUser]);
 
   // Gets the average rating from ratings systems

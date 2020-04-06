@@ -27,16 +27,16 @@ const Form = styled.form`
 const Submit = styled.input`
   border: 1px solid black;
   border-radius: 5px;
-  width: 50%;
+  width: 40%;
   background: cornflowerBlue;
   padding: 8px;
-  font-size: 1em;
+  font-size: 1rem;
   font-weight: bold;
   margin-top: 1.7em;
 `;
 
 const TextInput = styled.input`
-  height: 3em;
+  height: 2rem;
   width: 100%;
   padding: 0.5rem;
   border: 1px solid black;
@@ -46,7 +46,7 @@ const TextInput = styled.input`
 `;
 
 const Error = styled.p`
-  margin-top: 10px;
+  margin: 0;
   color: red;
 `;
 
