@@ -13,7 +13,6 @@ import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
-import testData from './test-data';
 import { capitalize, toSearchString, regEx } from './helpers';
 
 firebase.initializeApp(config.FIREBASE);
@@ -206,17 +205,17 @@ const WelcomeMsg = styled.span`
 `
 
 let renderCount = 0;
-const env = process.env.NODE_ENV;
+// const env = process.env.NODE_ENV;
 
 const App = () => {
 
   const [titles, setTitles] = useState([]);
-  const [movieData, setMovieData] = useState(env === 'development' ? testData : []);
+  const [movieData, setMovieData] = useState([]); //env === 'development' ? testData : 
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState('');
   const [movieToDelete, setMovieToDelete] = useState('');
-  const [isLoading, setIsLoading] = useState(env === 'development' ? false : true);
+  const [isLoading, setIsLoading] = useState(true); // env === 'development' ? false : 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
@@ -256,7 +255,7 @@ const App = () => {
   }
 
   useEffect(() => {
-    if (env !== 'development') {
+    // if (env !== 'development') {
       let unsubscribe = () => {};
       async function getMovies() {
         unsubscribe = db
@@ -286,11 +285,11 @@ const App = () => {
       return () => {
         unsubscribe();
       };
-    }
+    // }
   }, []);
 
   useEffect(() => {
-    if (env !== 'development') {
+    // if (env !== 'development') {
       async function getUsersAndWatchList() {
         if (currUser) {
           let users = [];
@@ -332,7 +331,7 @@ const App = () => {
         getUsersAndWatchList()
         .then(setIsLoading(false))
         .catch(error => console.log('Error retrieving user data', error));
-    }
+    // }
   }, [currUser]);
 
   // Gets the average rating from ratings systems
@@ -385,7 +384,7 @@ const App = () => {
   }, [newMovieAdded, currUser]);
 
   useEffect(() => {
-    if (currUser && firebaseUserId && movieData.map(movie => movie.creator === currUser).length < 1) {
+    if (currUser && firebaseUserId && movieData.map(movie => movie.creator === currUser).length <= 1) {
       console.log('updating user active')
       db
       .collection('users')
@@ -469,6 +468,7 @@ const App = () => {
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(doc => {
+          console.log('id', id)
           id = doc.id;
         });
       })
@@ -493,6 +493,7 @@ const App = () => {
       const newWatchList = watchList;
       newWatchList.push(event.title);
       setWatchList(newWatchList);
+      localStorage.setItem('watchList', JSON.stringify(newWatchList));
       setMovieAddedToWatchList(true);
       handleSetActionMessage(`${event.title} was added to your watchlist!`, 'alert');
       if (currUser !== 'Guest') {
@@ -508,14 +509,21 @@ const App = () => {
     const watchListCopy = watchList;
     const movies = watchListCopy.filter(movie => movie !== event.title);
     setWatchList(movies);
+    localStorage.setItem('watchList', JSON.stringify(movies));
     if (currUser !== 'Guest') {
       if (!firebaseUserId) await getFirebaseUserDocId();
         await updateFirebaseWatchList(firebaseUserId, movies);
+        localStorage.setItem('watchList', JSON.stringify(watchList));
     }
   }
 
   async function handleSignUp(name, email, password) {
     let userNameExists = false;
+    if ((name.length) < 3) {
+      setSignUpError(`You need a user name of at least three letters`);
+      setTimeout(() => setSignUpError(''), 2500);
+      return;
+    }
     await db.collection("users").where("displayName", "==", name).limit(1)
       .get()
       .then(function(snap) {
