@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
-import testData from './test-data';
+// import testData from './test-data';
 import firebase from 'firebase/app';
 import config from './config';
 import 'firebase/firestore';
@@ -207,16 +207,17 @@ const WelcomeMsg = styled.span`
 
 let renderCount = 0;
 const env = process.env.NODE_ENV;
+const isDev = (env === 'development');
 
 const App = () => {
 
   const [titles, setTitles] = useState([]);
-  const [movieData, setMovieData] = useState(env === 'development' ? testData : []); //env === 'development' ? testData : 
+  const [movieData, setMovieData] = useState([]); //env === 'development' ? testData : 
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState('');
   const [movieToDelete, setMovieToDelete] = useState('');
-  const [isLoading, setIsLoading] = useState(env === 'development' ? false : true); // env === 'development' ? false : 
+  const [isLoading, setIsLoading] = useState(true); // env === 'development' ? false : 
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
@@ -234,9 +235,15 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [shouldDismissModal, setShouldDismissModal] = useState(false);
   const [firebaseUserId, setFirebaseUserId] = useState(null);
+  const [moviesLastUpdatedAt, setMoviesLastUpdatedAt] = useState(null);
+  const [shouldFetchMovies, setShouldFetchMovies] = useState(false);
+  const [finishedStorageCheck, setFinishedStorageCheck] = useState(false);
+  const [hasRetrievedInitialMovieData, setHasRetrievedInitialMovieData] = useState(false);
 
-  renderCount +=1;
-  console.log('render count', renderCount);
+  if (isDev) {
+    renderCount +=1;
+    console.log('render count', renderCount);
+  }
 
   firebase.auth().onAuthStateChanged(user => {
     const currentUser = firebase.auth().currentUser;
@@ -249,91 +256,123 @@ const App = () => {
     }
   });
 
-  if (!isLoading) {
-    // Only add watchlist data to local storage if movie has
-    // been added, to avoid overriding on initial load with empty array
-    if (movieAddedToWatchList) localStorage.setItem('watchList', JSON.stringify(watchList));
-  }
-
   useEffect(() => {
-    if (env !== 'development') {
-      let unsubscribe = () => {};
-      async function getMovies() {
-        unsubscribe = db
-          .collection('movies')
-          .orderBy('created', 'desc')
-          .onSnapshot(querySnapshot => {
-            let data = [];
-            let movieTitles = [];
-            if (!querySnapshot) console.log('error getting movies');
-            else {
-              querySnapshot.forEach(doc => {
-                const docData = doc.data();
-                const id = doc.id;
-                const avgRating = getAvgRatings(docData.ratings);
-                const allData = { ...docData, id, avgRating };
-                data.push(allData);
-                movieTitles.push(docData.title);
-              });
-              setMovieData(data);
-              setTitles(movieTitles);
-              setIsLoading(false);
-            }
-          });
+    async function checkFBLastUpdated() {
+      let firebaseMoviesLastUpdated;
+      const storageMoviesLastUpdated = localStorage.getItem('moviesLastUpdatedAt');
+      await db.collection('meta').doc('lastUpdated')
+      .get()
+      .then(doc => {
+          const lastUpdated = doc.data();
+          firebaseMoviesLastUpdated = lastUpdated.movies;
+        }).catch(e => {
+          console.error(e);
+          return
+        })
+      if (!storageMoviesLastUpdated || firebaseMoviesLastUpdated > storageMoviesLastUpdated) {
+        setShouldFetchMovies(true);
       }
-
-      getMovies()
-
-      return () => {
-        unsubscribe();
-      };
+      setMoviesLastUpdatedAt(firebaseMoviesLastUpdated);
+      setFinishedStorageCheck(true);
     }
+    checkFBLastUpdated()
   }, []);
 
   useEffect(() => {
-    if (env !== 'development') {
-      async function getUsersAndWatchList() {
-        if (currUser) {
-          let users = [];
-          let watchListData = [];
-          if (currUser === 'Guest') {
-            watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
-          }
-          await db
-            .collection('users')
+    if (moviesLastUpdatedAt) localStorage.setItem('moviesLastUpdatedAt', JSON.stringify(moviesLastUpdatedAt));
+    if (movieData && movieData.length) localStorage.setItem('movieData', JSON.stringify(movieData));
+    if (!isLoading && movieAddedToWatchList) localStorage.setItem('watchList', JSON.stringify(watchList));
+  }, [movieData, moviesLastUpdatedAt, isLoading, watchList, movieAddedToWatchList]);
+
+  useEffect(() => {
+    if (finishedStorageCheck) {
+      if (shouldFetchMovies) {
+        async function getMovies() {
+          if (isDev) console.log('getting from remote')
+          db.collection('movies')
+            .orderBy('created', 'desc')
             .get()
             .then(querySnapshot => {
-              querySnapshot.forEach(user => {
-                const data = user.data();
-                if (data.isActive) users.push(data.displayName);
-                if (currUser === data.displayName) {
-                  setFirebaseUserId(user.id);
-                  if (data.watchList) {
-                    data.watchList.forEach(movie => watchListData.push(movie));
-                  }
-                }
-              });
-              if (currUser !== 'Guest') {
-                const displayName = firebase.auth().currentUser.displayName;
-                if (users.indexOf(displayName) === -1) {
-                  db.collection('users')
-                    .add({ displayName })
-                    .then((docRef) => {
-                      setFirebaseUserId(docRef.id);
-                    })
-                    .catch(e => console.log(e));
-                }
+              let data = [];
+              let movieTitles = [];
+              if (!querySnapshot) console.log('error getting movies');
+              else {
+                querySnapshot.forEach(doc => {
+                  const docData = doc.data();
+                  const id = doc.id;
+                  const avgRating = getAvgRatings(docData.ratings);
+                  const allData = { ...docData, id, avgRating };
+                  data.push(allData);
+                  movieTitles.push(docData.title);
+                });
+                setMovieData(data);
               }
-              setUsers(users);
-              setWatchList(watchListData);
+            }).catch(e => {
+              console.error(e);
             });
         }
-      }
 
-        getUsersAndWatchList()
-        .catch(error => console.log('Error retrieving user data', error));
+        getMovies()
+        .then(setHasRetrievedInitialMovieData(true))
+        .catch(error => console.log('Error retrieving movie data', error));
+      } else {
+        if (isDev) console.log('getting from storage')
+        setMovieData(JSON.parse(localStorage.getItem('movieData')));
+        setHasRetrievedInitialMovieData(true);
+      }
     }
-  }, [currUser]);
+  }, [shouldFetchMovies, finishedStorageCheck]);
+
+  useEffect(() => {
+    if (movieData && movieData.length) {
+      setTitles(movieData.filter(movie => movie.title));
+    }
+  }, [movieData])
+
+  useEffect(() => {
+    if (hasRetrievedInitialMovieData) {
+        async function getUsersAndWatchList() {
+          if (currUser) {
+            let users = [];
+            let watchListData = [];
+            if (currUser === 'Guest') {
+              watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
+            }
+            await db
+              .collection('users')
+              .get()
+              .then(querySnapshot => {
+                querySnapshot.forEach(user => {
+                  const data = user.data();
+                  if (data.isActive) users.push(data.displayName);
+                  if (currUser === data.displayName) {
+                    setFirebaseUserId(user.id);
+                    if (data.watchList) {
+                      data.watchList.forEach(movie => watchListData.push(movie));
+                    }
+                  }
+                });
+                if (currUser !== 'Guest') {
+                  const displayName = firebase.auth().currentUser.displayName;
+                  if (users.indexOf(displayName) === -1) {
+                    db.collection('users')
+                      .add({ displayName })
+                      .then((docRef) => {
+                        setFirebaseUserId(docRef.id);
+                      })
+                      .catch(e => console.log(e));
+                  }
+                }
+                setUsers(users);
+                setWatchList(watchListData);
+              });
+          }
+      }
+      getUsersAndWatchList()
+      .catch(error => console.log('Error retrieving user data', error));
+      setIsLoading(false);
+    }
+  }, [currUser, hasRetrievedInitialMovieData]);
 
   // Gets the average rating from ratings systems
   // ie. IMdB, Rotten Tomatoes and Metacritic
@@ -348,20 +387,26 @@ const App = () => {
     return (ratingTotal / numRatings).toFixed(2);
   };
 
+  const setMoviesLastUpdated = () => {
+    const now = Date.now();
+    db.collection('meta').doc('lastUpdated').set({ movies: now }).catch(e => console.log(e));
+    setMoviesLastUpdatedAt(now);
+  }
+
   useEffect(() => {
+    const {
+      title,
+      year,
+      genre,
+      director,
+      actors,
+      plot,
+      ratings,
+      poster,
+      created,
+      creator,
+    } = newMovieAdded;
     if (newMovieAdded !== '' && currUser) {
-      const {
-        title,
-        year,
-        genre,
-        director,
-        actors,
-        plot,
-        ratings,
-        poster,
-        created,
-        creator,
-      } = newMovieAdded;
       db.collection('movies')
         .add({
           title,
@@ -375,8 +420,14 @@ const App = () => {
           created,
           creator,
         })
-        .then(() => {
+        .then((doc) => {
           handleSetActionMessage('Movie Added!', 'alert');
+          const id = doc.id;
+          const avgRating = getAvgRatings(newMovieAdded.ratings);
+          const newMovie = { ...newMovieAdded, id, avgRating };
+          const newData = [ ...movieData, newMovie ];
+          setMovieData(newData);
+          setMoviesLastUpdated();
         })
         .catch(error => {
           console.error('Error adding document: ', error);
@@ -405,6 +456,9 @@ const App = () => {
         .then(() => {
           setMovieToDelete('');
           handleSetActionMessage('Movie successfully deleted!', 'alert');
+          const newData = movieData.filter(movie => movie.title !== movieToDelete.title);
+          setMovieData(newData);
+          setMoviesLastUpdated();
         })
         .catch(function(error) {
           handleSetActionMessage(`Error removing movie: ${error}`, 'error');
@@ -621,28 +675,30 @@ const App = () => {
   }
 
   useEffect(() => {
-    let movieDataCopy = [...movieData];
-    switch (sortSelected) {
-      case 'dateAdded':
-        movieDataCopy.sort((a, b) => (a.created.seconds > b.created.seconds ? -1 : 1));
-        setMovieData(movieDataCopy);
-        break;
-      case 'releaseYear':
-        movieDataCopy.sort((a, b) => (a.year > b.year ? -1 : 1));
-        setMovieData(movieDataCopy);
-        break;
-      case 'title':
-        movieDataCopy.sort((a, b) => (a.title > b.title ? 1 : -1));
-        setMovieData(movieDataCopy);
-        break;
-      case 'avgRating':
-        movieDataCopy.sort((a, b) => (parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1));
-        setMovieData(movieDataCopy);
-        break;
-      default:
-        break;
+    if (movieData && movieData.length) {
+      let movieDataCopy = [...movieData];
+      switch (sortSelected) {
+        case 'dateAdded':
+          movieDataCopy.sort((a, b) => (a.created.seconds > b.created.seconds ? -1 : 1));
+          setMovieData(movieDataCopy);
+          break;
+        case 'releaseYear':
+          movieDataCopy.sort((a, b) => (a.year > b.year ? -1 : 1));
+          setMovieData(movieDataCopy);
+          break;
+        case 'title':
+          movieDataCopy.sort((a, b) => (a.title > b.title ? 1 : -1));
+          setMovieData(movieDataCopy);
+          break;
+        case 'avgRating':
+          movieDataCopy.sort((a, b) => (parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1));
+          setMovieData(movieDataCopy);
+          break;
+        default:
+          break;
+      }
+      setSortSelected('');
     }
-    setSortSelected('');
   }, [movieData, sortSelected]);
 
   const mainData = isLoading
