@@ -38,7 +38,7 @@ const Submit = styled.input`
 const TextInput = styled.input`
   height: 18px;
   width: 100%;
-  padding: 0.5rem;
+  /* padding: 0.5rem; */
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
@@ -76,24 +76,14 @@ const SignIn = ({ modalDismiss, passwordReset, passwordResetError, handleSignInC
         <MyModal override={modalDismiss} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
             <Form className="Form" onSubmit={handleSignInCallback}>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                }}
-              >
-                <PasswordResetForm shouldDismissModal={modalDismiss} passwordResetCallback={passwordReset} emailError={passwordResetError}/>
-                <Title>Sign in to edit</Title>
-                <span style={{ marginBottom: '1.3em' }}>
-                </span>
-              </div>
+              <PasswordResetForm shouldDismissModal={modalDismiss} passwordResetCallback={passwordReset} emailError={passwordResetError}/>
+              <Title>Sign in to edit</Title>
                 <label htmlFor="email">Email:</label>
                 <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
                 <div style={{ marginTop: '10px' }}>
                   <label htmlFor="password">Password:</label>
-                  <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
                 </div>
+                <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
                 <Submit className="Submit" onClick={handleSignIn} type="submit" value='Sign In' />
                 <br />
                 <Error>{signInError}</Error>

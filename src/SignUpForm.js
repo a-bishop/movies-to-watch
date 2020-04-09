@@ -27,7 +27,7 @@ const Submit = styled.input`
 
 const TextInput = styled.input`
   height: 18px;
-  width: 100%;
+  /* width: 100%; */
   padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
@@ -42,6 +42,7 @@ const Error = styled.p`
 
 const Form = styled.form`
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   border: 2px solid black;
   padding: 2rem;
@@ -78,25 +79,17 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
         <MyModal override={modalDismiss} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
             <Form className="Form" onSubmit={handleSignUpCallback}>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                }}
-              >
-                <Title>Sign up</Title>
-              </div>
+              <Title>Sign up</Title>
               <label htmlFor="email">First Name:</label>
               <TextInput type="name" id="name" onChange={handleSetName} value={name} />
               <div style={{ marginTop: '10px' }}>
               <label htmlFor="email">Email:</label>
-              <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
               </div>
+              <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
               <div style={{ marginTop: '10px' }}>
                 <label htmlFor="password">Choose a Password:</label>
-                <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
               </div>
+              <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
               <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!" />
               <br />
               <Error>{signUpError}</Error>
