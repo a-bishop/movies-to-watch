@@ -278,6 +278,7 @@ const App = () => {
     checkFBLastUpdated()
   }, []);
 
+  
   useEffect(() => {
     if (moviesLastUpdatedAt) localStorage.setItem('moviesLastUpdatedAt', JSON.stringify(moviesLastUpdatedAt));
     if (movieData && movieData.length) localStorage.setItem('movieData', JSON.stringify(movieData));
@@ -325,7 +326,7 @@ const App = () => {
 
   useEffect(() => {
     if (movieData && movieData.length) {
-      setTitles(movieData.filter(movie => movie.title));
+      setTitles(movieData.map(movie => movie.title));
     }
   }, [movieData])
 
@@ -407,6 +408,7 @@ const App = () => {
       creator,
     } = newMovieAdded;
     if (newMovieAdded !== '' && currUser) {
+      setNewMovieAdded('');
       db.collection('movies')
         .add({
           title,
@@ -425,7 +427,7 @@ const App = () => {
           const id = doc.id;
           const avgRating = getAvgRatings(newMovieAdded.ratings);
           const newMovie = { ...newMovieAdded, id, avgRating };
-          const newData = [ ...movieData, newMovie ];
+          const newData = [ newMovie, ...movieData ];
           setMovieData(newData);
           setMoviesLastUpdated();
         })
@@ -433,7 +435,7 @@ const App = () => {
           console.error('Error adding document: ', error);
         });
     }
-  }, [newMovieAdded, currUser]);
+  }, [newMovieAdded, currUser, movieData]);
 
   useEffect(() => {
     if (currUser && firebaseUserId && movieData.map(movie => movie.creator === currUser).length <= 1) {
@@ -464,7 +466,7 @@ const App = () => {
           handleSetActionMessage(`Error removing movie: ${error}`, 'error');
         });
     }
-  }, [movieToDelete]);
+  }, [movieToDelete, movieData]);
 
   function handleAddMovie([movie, year]) {
     setAlreadyAdded(false);
