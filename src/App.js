@@ -317,8 +317,9 @@ const App = () => {
         .then(setHasRetrievedInitialMovieData(true))
         .catch(error => console.log('Error retrieving movie data', error));
       } else {
-        if (isDev) console.log('getting from storage')
+        if (isDev) console.log('getting from storage');
         setMovieData(JSON.parse(localStorage.getItem('movieData')));
+        setSortSelected('dateAdded');
         setHasRetrievedInitialMovieData(true);
       }
     }

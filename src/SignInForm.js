@@ -17,6 +17,7 @@ const SignInText = styled.div`
 
 const Form = styled.form`
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   border: 2px solid black;
   padding: 2rem;
@@ -37,8 +38,7 @@ const Submit = styled.input`
 
 const TextInput = styled.input`
   height: 18px;
-  width: 100%;
-  /* padding: 0.5rem; */
+  padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
   font-weight: bold;
