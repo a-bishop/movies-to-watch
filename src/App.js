@@ -329,52 +329,39 @@ const App = () => {
     if (movieData && movieData.length) {
       setTitles(movieData.map(movie => movie.title));
     }
-  }, [movieData])
+  }, [movieData]);
+
 
   useEffect(() => {
-    if (hasRetrievedInitialMovieData) {
-        async function getUsersAndWatchList() {
-          if (currUser) {
-            let users = [];
-            let watchListData = [];
-            if (currUser === 'Guest') {
-              watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
-            }
-            await db
-              .collection('users')
-              .get()
-              .then(querySnapshot => {
-                querySnapshot.forEach(user => {
-                  const data = user.data();
-                  if (data.isActive) users.push(data.displayName);
-                  if (currUser === data.displayName) {
-                    setFirebaseUserId(user.id);
-                    if (data.watchList) {
-                      data.watchList.forEach(movie => watchListData.push(movie));
-                    }
-                  }
-                });
-                if (currUser !== 'Guest') {
-                  const displayName = firebase.auth().currentUser.displayName;
-                  if (users.indexOf(displayName) === -1) {
-                    db.collection('users')
-                      .add({ displayName })
-                      .then((docRef) => {
-                        setFirebaseUserId(docRef.id);
-                      })
-                      .catch(e => console.log(e));
-                  }
+    if (isLoading && currUser && hasRetrievedInitialMovieData) {
+      async function getUsersAndWatchList() {
+        let activeUsers = [];
+        let watchListData = [];
+        if (currUser === 'Guest') {
+          watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
+        }
+        await db
+          .collection('users')
+          .get()
+          .then(async querySnapshot => {
+            await querySnapshot.forEach(user => {
+              const data = user.data();
+              if (data.isActive) activeUsers.push(data.displayName);
+              if (currUser === data.displayName) {
+                if (data.watchList) {
+                  data.watchList.forEach(movie => watchListData.push(movie));
                 }
-                setUsers(users);
-                setWatchList(watchListData);
-              });
-          }
+              }
+            });
+            setUsers(activeUsers);
+            setWatchList(watchListData);
+          });
       }
       getUsersAndWatchList()
       .catch(error => console.log('Error retrieving user data', error));
       setIsLoading(false);
     }
-  }, [currUser, hasRetrievedInitialMovieData]);
+  }, [currUser, isLoading, hasRetrievedInitialMovieData]);
 
   // Gets the average rating from ratings systems
   // ie. IMdB, Rotten Tomatoes and Metacritic
@@ -437,19 +424,6 @@ const App = () => {
         });
     }
   }, [newMovieAdded, currUser, movieData]);
-
-  useEffect(() => {
-    if (currUser && firebaseUserId && movieData.map(movie => movie.creator === currUser).length <= 1) {
-      console.log('updating user active')
-      db
-      .collection('users')
-      .doc(firebaseUserId)
-      .update({ isActive: true })
-      .catch(function(error) {
-        console.log('Error setting user to active: ', error);
-      });
-    }
-  }, [movieData, currUser, firebaseUserId]);
 
   useEffect(() => {
     if (movieToDelete !== '') {
@@ -518,24 +492,6 @@ const App = () => {
     }, timer);
   }
 
-  async function getFirebaseUserDocId() {
-    let id;
-    await db
-      .collection('users')
-      .where('displayName', '==', currUser)
-      .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          console.log('id', id)
-          id = doc.id;
-        });
-      })
-      .catch(function(error) {
-        console.log('Error getting id: ', error);
-      });
-    setFirebaseUserId(id);
-  }
-
   async function updateFirebaseWatchList(id, movies) {
     await db
       .collection('users')
@@ -555,7 +511,6 @@ const App = () => {
       setMovieAddedToWatchList(true);
       handleSetActionMessage(`${event.title} was added to your watchlist!`, 'alert');
       if (currUser !== 'Guest') {
-        if (!firebaseUserId) await getFirebaseUserDocId();
         await updateFirebaseWatchList(firebaseUserId, newWatchList);
       }
     } else {
@@ -569,7 +524,6 @@ const App = () => {
     setWatchList(movies);
     localStorage.setItem('watchList', JSON.stringify(movies));
     if (currUser !== 'Guest') {
-      if (!firebaseUserId) await getFirebaseUserDocId();
         await updateFirebaseWatchList(firebaseUserId, movies);
         localStorage.setItem('watchList', JSON.stringify(watchList));
     }
@@ -654,9 +608,27 @@ const App = () => {
       });
     const user = firebase.auth().currentUser;
     if (user && user.emailVerified) {
-      setCurrUser(user.displayName);
+      await db.collection("users").where("displayName", "==", user.displayName).limit(1)
+        .get()
+        .then(function(snap) {
+          console.log('snap', snap);
+          if (snap.empty) {
+            db.collection('users')
+              .add({ displayName: user.displayName, isActive: false })
+              .then((docRef) => {
+                setFirebaseUserId(docRef.id);
+                console.log('fbuid', firebaseUserId);
+              })
+              .catch(e => console.log(e));
+          } else {
+            setFirebaseUserId(snap.docs[0].id);
+          }
+        })
+        .catch(e => console.log(e));
+      // close the sign in modal
       setShouldDismissModal(true);
       setShouldDismissModal(false);
+      setCurrUser(user.displayName);
     }
     else if (user && !user.emailVerified) {
       setSignInError('You need to confirm your email before you can sign in');
