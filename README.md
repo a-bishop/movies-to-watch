@@ -10,16 +10,4 @@ Technologies Used:
 - Open Movie Database API
 - Jest / react-testing-library
 
-Features:
-
-- Search functionality
-- Email / password authentication and role-based authorization for CRUD operations
-- Filtering / sorting
-- Local storage caching
-- CSS animations
-
-TODO:
-
-- Add more tests
-
 [Demo](https://movie-recommendations.netlify.com)
