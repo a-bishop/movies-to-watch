@@ -3,13 +3,21 @@ import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
 import styled from 'styled-components';
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+
+// const Flex = styled.div`
+//   display: flex;
+//   align-items: center;
+// `
+
 const Title = styled.h4`
   margin-top: 0;
   margin-bottom: 0.8em;
 `;
 
 const SignUpText = styled.div`
-  margin-left: 1rem;
+  margin: 0 1rem 0 1rem;
   text-decoration: underline;
   cursor: pointer;
 `;
@@ -28,10 +36,19 @@ const Submit = styled.input`
 const TextInput = styled.input`
   height: 18px;
   padding: 0.5rem;
-  border: 1px solid black;
+  border: 1px solid ${props => props.notReady ? 'red' : 'black'};
   font-family: Futura;
   font-weight: bold;
   margin-top: 10px;
+`;
+
+const Icon = styled(FontAwesomeIcon)`
+  position: absolute;
+  right: 5%;
+  bottom: -20%;
+  &:hover {
+    cursor: pointer;
+  }
 `;
 
 const Error = styled.p`
@@ -45,13 +62,14 @@ const Form = styled.form`
   flex-direction: column;
   border: 2px solid black;
   padding: 2rem;
-  margin: 1rem;
+  margin: 1rem 1rem 2rem 1rem;
   background: darkkhaki;
 `;
 
 const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
 
   function handleSetEmail(e) {
@@ -71,6 +89,9 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
     handleSignUpCallback(name, email, password);
   }
 
+  const notReady = name.length <= 3 || password.length <= 3 || !email.match(/^[^@\s]+@[^@\s.]+.[^@.\s]+$/);
+  const ready = !notReady;
+
   return (
     <ToggleContent
       toggle={show => <SignUpText onClick={show}>Sign Up</SignUpText>}
@@ -80,16 +101,20 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
             <Form className="Form" onSubmit={handleSignUpCallback}>
               <Title>Sign up</Title>
               <label htmlFor="email">First Name:</label>
-              <TextInput type="name" id="name" onChange={handleSetName} value={name} />
+              <TextInput notReady={name.length <= 3} type="name" id="name" onChange={handleSetName} value={name} />
               <div style={{ marginTop: '10px' }}>
               <label htmlFor="email">Email:</label>
               </div>
-              <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
+              <TextInput notReady={!email.match(/^[^@\s]+@[^@\s.]+.[^@.\s]+$/)} type="email" id="email" onChange={handleSetEmail} value={email} />
               <div style={{ marginTop: '10px' }}>
                 <label htmlFor="password">Choose a Password:</label>
               </div>
-              <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
-              <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!" />
+              <TextInput notReady={password.length <= 3} id="password" type={showPassword ? "text" : "password"} onChange={handleSetPassword} value={password} />
+              <div style={{position: 'relative'}}>
+                <Icon onClick={() => setShowPassword(bool => !bool)} icon={showPassword ? faEye : faEyeSlash} />
+              </div>
+              {notReady && <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!" disabled/>}
+              {ready && <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!"/>}
               <br />
               <Error>{signUpError}</Error>
             </Form>

@@ -13,6 +13,8 @@ function useClickOutsideDismiss(ref, dismiss, callback, override) {
   function handleClickOutside(event) {
     const className = event.target.className;
     if (
+      className &&
+      typeof className === 'string' &&
       ref.current &&
       (className.includes('modalContainer') ||
         className.includes('dismissButton'))

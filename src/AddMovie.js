@@ -14,7 +14,7 @@ const Submit = styled.input`
 
 const TextInput = styled.input`
   margin-left: 1rem;
-  height: 2rem;
+  height: 18px;
   padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;
@@ -26,7 +26,6 @@ const Form = styled.form`
   padding: 1rem;
   background: lavender;
   max-width: 400px;
-  margin: 1rem; 
   display: grid;
   grid-gap: 10px;
 `;

@@ -15,7 +15,7 @@ import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
 import { capitalize, toSearchString, regEx } from './helpers';
-import { useInView } from 'react-hook-inview'
+// import { useInView } from 'react-hook-inview';
 
 firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
@@ -29,13 +29,10 @@ const TitleContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  margin-left: 1em;
-  margin-right: 1em;
 `;
 
-const Title = styled.h2`
-  margin: 0;
-  margin-right: 20px;
+const Title = styled.h1`
+  margin: 0 1rem 0 0;
 `;
 
 const Sort = styled.div`
@@ -75,18 +72,22 @@ const SignOut = styled.button`
   font-family: Futura;
 `;
 
-const LoadMore = styled.div`
-  background: darkKhaki;
-  border: 2px solid black;
-  text-align: center;
-  margin: 1rem;
-  padding: 1rem;
-  cursor: pointer;
-`;
+const SignInSignUpWrapper = styled.div`
+  display: flex;
+`
+
+// const LoadMore = styled.div`
+//   background: darkKhaki;
+//   border: 2px solid black;
+//   text-align: center;
+//   margin: 1rem;
+//   padding: 1rem;
+//   cursor: pointer;
+// `;
 
 const SelectMenuTitle = styled.h4`
   width: 90px;
-  margin: 0;
+  margin: 0 0 0 1em;
 `;
 
 const rotateLeft = keyframes`
@@ -104,7 +105,7 @@ const DownArrow = styled.i`
   display: inline-block;
   padding: 3px;
   transform: rotate(45deg);
-  ${props => {
+  ${(props) => {
     if (props.animate)
       return css`
         animation: ${rotateLeft} 0.25s linear;
@@ -132,7 +133,7 @@ const MessageContainer = styled.div`
   transform: translate(-50%, 0);
   border-radius: 5px;
   z-index: 3;
-  ${props => {
+  ${(props) => {
     let color = 'rgba(201, 226, 222, 0.9)';
     if (!props.type) return;
     else {
@@ -160,6 +161,7 @@ const MessageContainer = styled.div`
 
 const NoWatchListMsg = styled.h4`
   padding: 0 2em 1em 2em;
+  height: 100px;
 `;
 
 const Flex = styled.div`
@@ -167,58 +169,49 @@ const Flex = styled.div`
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 `;
 
 const SortFlex = styled(Flex)`
-  justify-content: space-around;
+  justify-content: flex-end;
   flex: 1.5;
-`
+`;
 
-const FlexHeaderSignedIn = styled(Flex)`
-  flex-wrap: nowrap;
-  @media only screen and (max-width: 700px) {
-    min-width:100%;
-  }
+const FlexHeader = styled(Flex)`
+  width: 100%;
+  margin: 0 0 1rem 0;
 `;
 
 const Search = styled.input`
-  flex: 2;
+  flex: 0.8;
+  padding-left: 0.5em;
   font-family: Futura;
-  padding-left: 0.5rem;
-  margin-right: 0.5rem;
   border: 1px solid black;
   height: 2.5rem;
-  margin: 1rem;
-  @media only screen and (min-width: 700px) {
-    min-width: 400px;
-  }
-`;
-
-const FormContainer = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  padding: 0.5rem;
+  /* margin-left: auto; */
+  /* @media only screen and (min-width: 700px) {
+    max-width: 600px;
+  } */
 `;
 
 const WelcomeMsg = styled.span`
   font-weight: 'normal';
   white-space: 'nowrap';
   margin-right: 10px;
-`
+`;
 
 // let renderCount = 0;
 const env = process.env.NODE_ENV;
-const isDev = (env === 'development');
+const isDev = env === 'development';
 
 const App = () => {
-
   const [titles, setTitles] = useState([]);
-  const [movieData, setMovieData] = useState([]); //env === 'development' ? testData : 
+  const [movieData, setMovieData] = useState([]); //env === 'development' ? testData :
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState('');
   const [movieToDelete, setMovieToDelete] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // env === 'development' ? false : 
+  const [isLoading, setIsLoading] = useState(true); // env === 'development' ? false :
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
@@ -228,7 +221,7 @@ const App = () => {
   const [sortSelected, setSortSelected] = useState('');
   const [currUser, setCurrUser] = useState('');
   const [filterSelected, setFilterSelected] = useState('');
-  const [limit, setLimit] = useState(10);
+  // const [limit, setLimit] = useState(10);
   const [users, setUsers] = useState([]);
   const [watchList, setWatchList] = useState([]);
   const [movieAddedToWatchList, setMovieAddedToWatchList] = useState(false);
@@ -241,17 +234,17 @@ const App = () => {
   const [finishedStorageCheck, setFinishedStorageCheck] = useState(false);
   const [hasRetrievedInitialMovieData, setHasRetrievedInitialMovieData] = useState(false);
 
-  const [loadMoreRef] = useInView({
-    onEnter: () => setTimeout(() => setLimit(limit => limit += 10), 300),
-    threshold: 1,
-  })
+  // const [loadMoreRef] = useInView({
+  //   onEnter: () => setTimeout(() => setLimit((limit) => (limit += 10)), 300),
+  //   threshold: 1,
+  // });
 
   if (isDev) {
     // renderCount +=1;
     // console.log('render count', renderCount);
   }
 
-  firebase.auth().onAuthStateChanged(user => {
+  firebase.auth().onAuthStateChanged((user) => {
     const currentUser = firebase.auth().currentUser;
     if (user && user.emailVerified) {
       setIsSignedIn(true);
@@ -266,45 +259,49 @@ const App = () => {
     async function checkFBLastUpdated() {
       let firebaseMoviesLastUpdated;
       const storageMoviesLastUpdated = localStorage.getItem('moviesLastUpdatedAt');
-      await db.collection('meta').doc('lastUpdated')
-      .get()
-      .then(doc => {
+      await db
+        .collection('meta')
+        .doc('lastUpdated')
+        .get()
+        .then((doc) => {
           const lastUpdated = doc.data();
           firebaseMoviesLastUpdated = lastUpdated.movies;
-        }).catch(e => {
-          console.error(e);
-          return
         })
+        .catch((e) => {
+          console.error(e);
+          return;
+        });
       if (!storageMoviesLastUpdated || firebaseMoviesLastUpdated > storageMoviesLastUpdated) {
         setShouldFetchMovies(true);
       }
       setMoviesLastUpdatedAt(firebaseMoviesLastUpdated);
       setFinishedStorageCheck(true);
     }
-    checkFBLastUpdated()
+    checkFBLastUpdated();
   }, []);
 
-  
   useEffect(() => {
-    if (moviesLastUpdatedAt) localStorage.setItem('moviesLastUpdatedAt', JSON.stringify(moviesLastUpdatedAt));
+    if (moviesLastUpdatedAt)
+      localStorage.setItem('moviesLastUpdatedAt', JSON.stringify(moviesLastUpdatedAt));
     if (movieData && movieData.length) localStorage.setItem('movieData', JSON.stringify(movieData));
-    if (!isLoading && movieAddedToWatchList) localStorage.setItem('watchList', JSON.stringify(watchList));
+    if (!isLoading && movieAddedToWatchList)
+      localStorage.setItem('watchList', JSON.stringify(watchList));
   }, [movieData, moviesLastUpdatedAt, isLoading, watchList, movieAddedToWatchList]);
 
   useEffect(() => {
     if (finishedStorageCheck) {
       if (shouldFetchMovies) {
         async function getMovies() {
-          if (isDev) console.log('getting from remote')
+          if (isDev) console.log('getting from remote');
           db.collection('movies')
             .orderBy('created', 'desc')
             .get()
-            .then(querySnapshot => {
+            .then((querySnapshot) => {
               let data = [];
               let movieTitles = [];
               if (!querySnapshot) console.log('error getting movies');
               else {
-                querySnapshot.forEach(doc => {
+                querySnapshot.forEach((doc) => {
                   const docData = doc.data();
                   const id = doc.id;
                   const avgRating = getAvgRatings(docData.ratings);
@@ -314,14 +311,15 @@ const App = () => {
                 });
                 setMovieData(data);
               }
-            }).catch(e => {
+            })
+            .catch((e) => {
               console.error(e);
             });
         }
 
         getMovies()
-        .then(setHasRetrievedInitialMovieData(true))
-        .catch(error => console.log('Error retrieving movie data', error));
+          .then(setHasRetrievedInitialMovieData(true))
+          .catch((error) => console.log('Error retrieving movie data', error));
       } else {
         if (isDev) console.log('getting from storage');
         setMovieData(JSON.parse(localStorage.getItem('movieData')));
@@ -333,28 +331,32 @@ const App = () => {
 
   useEffect(() => {
     if (movieData && movieData.length) {
-      setTitles(movieData.map(movie => movie.title));
+      setTitles(movieData.map((movie) => movie.title));
     }
   }, [movieData]);
 
   useEffect(() => {
-    if (firebaseUserId && movieData && currUser !== 'Guest' && movieData.filter(movie => movie.creator === currUser).length <=1) {
-      const isActive = movieData.filter(movie => movie.creator === currUser).length !== 0;
+    if (
+      firebaseUserId &&
+      movieData &&
+      currUser !== 'Guest' &&
+      movieData.filter((movie) => movie.creator === currUser).length <= 1
+    ) {
+      const isActive = movieData.filter((movie) => movie.creator === currUser).length !== 0;
       db.collection('users')
         .doc(firebaseUserId)
         .update({ isActive })
         .then(() => {
           let newUsers;
           if (isActive) newUsers = [currUser, ...users];
-          else newUsers = users.filter(user => user !== currUser);
-          setUsers(newUsers)
+          else newUsers = users.filter((user) => user !== currUser);
+          setUsers(newUsers);
         })
-        .catch(function(error) {
+        .catch(function (error) {
           console.log('Error updating user active: ', error);
         });
     }
-  }, [users, firebaseUserId, currUser, hasRetrievedInitialMovieData, movieData])
-
+  }, [users, firebaseUserId, currUser, hasRetrievedInitialMovieData, movieData]);
 
   useEffect(() => {
     if (isLoading && currUser && hasRetrievedInitialMovieData) {
@@ -367,13 +369,13 @@ const App = () => {
         await db
           .collection('users')
           .get()
-          .then(async querySnapshot => {
-            await querySnapshot.forEach(user => {
+          .then(async (querySnapshot) => {
+            await querySnapshot.forEach((user) => {
               const data = user.data();
               if (data.isActive) activeUsers.push(data.displayName);
               if (currUser === data.displayName) {
                 if (data.watchList) {
-                  data.watchList.forEach(movie => watchListData.push(movie));
+                  data.watchList.forEach((movie) => watchListData.push(movie));
                 }
               }
             });
@@ -381,15 +383,14 @@ const App = () => {
             setWatchList(watchListData);
           });
       }
-      getUsersAndWatchList()
-      .catch(error => console.log('Error retrieving user data', error));
+      getUsersAndWatchList().catch((error) => console.log('Error retrieving user data', error));
       setIsLoading(false);
     }
   }, [currUser, isLoading, hasRetrievedInitialMovieData]);
 
   // Gets the average rating from ratings systems
   // ie. IMdB, Rotten Tomatoes and Metacritic
-  const getAvgRatings = ratings => {
+  const getAvgRatings = (ratings) => {
     let ratingTotal = 0;
     let numRatings = ratings.length;
     for (const rating of ratings) {
@@ -402,9 +403,12 @@ const App = () => {
 
   const setMoviesLastUpdated = () => {
     const now = Date.now();
-    db.collection('meta').doc('lastUpdated').set({ movies: now }).catch(e => console.log(e));
+    db.collection('meta')
+      .doc('lastUpdated')
+      .set({ movies: now })
+      .catch((e) => console.log(e));
     setMoviesLastUpdatedAt(now);
-  }
+  };
 
   useEffect(() => {
     const {
@@ -439,11 +443,11 @@ const App = () => {
           const id = doc.id;
           const avgRating = getAvgRatings(newMovieAdded.ratings);
           const newMovie = { ...newMovieAdded, id, avgRating };
-          const newData = [ newMovie, ...movieData ];
+          const newData = [newMovie, ...movieData];
           setMovieData(newData);
           setMoviesLastUpdated();
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error adding document: ', error);
         });
     }
@@ -457,11 +461,11 @@ const App = () => {
         .then(() => {
           setMovieToDelete('');
           handleSetActionMessage('Movie successfully deleted!', 'alert');
-          const newData = movieData.filter(movie => movie.title !== movieToDelete.title);
+          const newData = movieData.filter((movie) => movie.title !== movieToDelete.title);
           setMovieData(newData);
           setMoviesLastUpdated();
         })
-        .catch(function(error) {
+        .catch(function (error) {
           handleSetActionMessage(`Error removing movie: ${error}`, 'error');
         });
     }
@@ -475,8 +479,8 @@ const App = () => {
         config.OMDB_KEY
       }`;
       fetch(url)
-        .then(res => res.json())
-        .then(json => {
+        .then((res) => res.json())
+        .then((json) => {
           if (json.Response === 'True') {
             const newMovie = {
               title: json.Title,
@@ -496,7 +500,7 @@ const App = () => {
             setTimeout(() => setNotFound(false), 2500);
           }
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
           setNotFound(true);
           setTimeout(() => setNotFound(false), 2500);
@@ -521,7 +525,7 @@ const App = () => {
       .collection('users')
       .doc(id)
       .set({ watchList: movies })
-      .catch(function(error) {
+      .catch(function (error) {
         console.log('Error updating watchList: ', error);
       });
   }
@@ -544,40 +548,46 @@ const App = () => {
 
   async function handleRemoveFromWatchList(event) {
     const watchListCopy = watchList;
-    const movies = watchListCopy.filter(movie => movie !== event.title);
+    const movies = watchListCopy.filter((movie) => movie !== event.title);
     setWatchList(movies);
     localStorage.setItem('watchList', JSON.stringify(movies));
     if (currUser !== 'Guest') {
-        await updateFirebaseWatchList(firebaseUserId, movies);
-        localStorage.setItem('watchList', JSON.stringify(watchList));
+      await updateFirebaseWatchList(firebaseUserId, movies);
+      localStorage.setItem('watchList', JSON.stringify(watchList));
     }
   }
 
   async function handleSignUp(name, email, password) {
     let userNameExists = false;
-    if ((name.length) < 3) {
+    if (name.length < 3) {
       setSignUpError(`Your name needs to be at least three letters`);
       setTimeout(() => setSignUpError(''), 2500);
       return;
     }
-    await db.collection("users").where("displayName", "==", name).limit(1)
+    await db
+      .collection('users')
+      .where('displayName', '==', name)
+      .limit(1)
       .get()
-      .then(function(snap) {
-        snap.forEach(doc => {
+      .then(function (snap) {
+        snap.forEach((doc) => {
           if (doc.exists) {
             userNameExists = true;
-            setSignUpError(`Please add your last initial to your name. A user with your name already exists!`);
+            setSignUpError(
+              `Please add your last initial to your name. A user with your name already exists!`
+            );
             setTimeout(() => setSignUpError(''), 2500);
           }
-        })
-      }).catch(function(error) {
-        console.log("Error getting document:", error);
+        });
+      })
+      .catch(function (error) {
+        console.log('Error getting document:', error);
       });
     if (userNameExists) return;
     await firebase
       .auth()
       .createUserWithEmailAndPassword(email, password)
-      .catch(function(error) {
+      .catch(function (error) {
         setSignUpError(`There was an error signing up: ${error}`);
         setTimeout(() => setSignUpError(''), 2500);
       });
@@ -587,17 +597,17 @@ const App = () => {
         .updateProfile({
           displayName: name,
         })
-        .then(function() {
+        .then(function () {
           console.log('success');
         });
       user
         .sendEmailVerification()
-        .then(function() {
+        .then(function () {
           handleSetActionMessage("Welcome! We've sent you an email confirmation!", 'alert', 5000);
           setShouldDismissModal(true);
           setShouldDismissModal(false);
         })
-        .catch(function(error) {
+        .catch(function (error) {
           setSignUpError(`There was an error signing up: ${error}`);
           setTimeout(() => setSignUpError(''), 2500);
         });
@@ -611,12 +621,12 @@ const App = () => {
 
     auth
       .sendPasswordResetEmail(email)
-      .then(function() {
+      .then(function () {
         handleSetActionMessage("We've sent you a password reset email", 'alert', 5000);
         setShouldDismissModal(true);
         setShouldDismissModal(false);
       })
-      .catch(function(error) {
+      .catch(function (error) {
         setPasswordResetError(`There was an error sending the email: ${error}`);
         setTimeout(() => setPasswordResetError(''), 2500);
       });
@@ -626,15 +636,18 @@ const App = () => {
     await firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
-      .catch(function(error) {
+      .catch(function (error) {
         setSignInError('There was an error with these credentials');
         setTimeout(() => setSignInError(''), 2500);
       });
     const user = firebase.auth().currentUser;
     if (user && user.emailVerified) {
-      await db.collection("users").where("displayName", "==", user.displayName).limit(1)
+      await db
+        .collection('users')
+        .where('displayName', '==', user.displayName)
+        .limit(1)
         .get()
-        .then(function(snap) {
+        .then(function (snap) {
           console.log('snap', snap);
           if (snap.empty) {
             db.collection('users')
@@ -643,18 +656,17 @@ const App = () => {
                 setFirebaseUserId(docRef.id);
                 console.log('fbuid', firebaseUserId);
               })
-              .catch(e => console.log(e));
+              .catch((e) => console.log(e));
           } else {
             setFirebaseUserId(snap.docs[0].id);
           }
         })
-        .catch(e => console.log(e));
+        .catch((e) => console.log(e));
       // close the sign in modal
       setShouldDismissModal(true);
       setShouldDismissModal(false);
       setCurrUser(user.displayName);
-    }
-    else if (user && !user.emailVerified) {
+    } else if (user && !user.emailVerified) {
       setSignInError('You need to confirm your email before you can sign in');
       setTimeout(() => setSignInError(''), 2500);
     }
@@ -664,10 +676,10 @@ const App = () => {
     await firebase
       .auth()
       .signOut()
-      .then(function() {
+      .then(function () {
         console.log('signed out');
       })
-      .catch(function(error) {
+      .catch(function (error) {
         console.log('Error with sign out', error);
       });
     setCurrUser(null);
@@ -690,7 +702,9 @@ const App = () => {
           setMovieData(movieDataCopy);
           break;
         case 'avgRating':
-          movieDataCopy.sort((a, b) => (parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1));
+          movieDataCopy.sort((a, b) =>
+            parseFloat(a.avgRating) > parseFloat(b.avgRating) ? -1 : 1
+          );
           setMovieData(movieDataCopy);
           break;
         default:
@@ -703,7 +717,7 @@ const App = () => {
   const mainData = isLoading
     ? null
     : movieData.filter(
-        movie =>
+        (movie) =>
           regEx(searchTerm).test(movie.title) &&
           (filterSelected === '' || movie.creator === filterSelected)
       );
@@ -713,7 +727,8 @@ const App = () => {
       <SyncLoader sizeUnit={'px'} size={30} color={'darkKhaki'} />
     </div>
   ) : (
-    mainData.slice(0, limit).map(movie => {
+    !mainData.length ? <div style={{fontStyle: 'italic'}}>No movies found!</div>
+    : mainData.map((movie) => {
       return (
         <Movie
           key={movie.id}
@@ -728,10 +743,10 @@ const App = () => {
     })
   );
 
-  const loadMoreButton =
-    !isLoading && limit <= movieData.length && mainData.length > 10 ? (
-      <LoadMore ref={loadMoreRef}>Loading More ...</LoadMore>
-    ) : null;
+  // const loadMoreButton =
+  //   !isLoading && limit <= movieData.length && mainData.length > 10 ? (
+  //     <LoadMore ref={loadMoreRef}>Loading More ...</LoadMore>
+  //   ) : null;
 
   const message = (
     <MessageContainer type={messageType}>
@@ -739,19 +754,25 @@ const App = () => {
     </MessageContainer>
   );
 
-  const signInSignUpSignOutSearch = isSignedIn? (
-    <FlexHeaderSignedIn>
-      <SignOut onClick={handleSignOut}>Sign Out</SignOut> 
-      <Search
-        type="text"
-        name="Search"
-        placeholder="Search the site for a movie title"
-        onChange={e => setSearchTerm(e.target.value)}
-      />
-    </FlexHeaderSignedIn>
-    )
-    : (
-    <FormContainer>
+  const searchInput = (
+    <Search
+      type="text"
+      name="Search"
+      placeholder="Search for a title"
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+  )
+
+  const signInSignUpSignOutSearch = isSignedIn ? (
+    <React.Fragment>
+    <SignInSignUpWrapper>
+      <SignOut onClick={handleSignOut}>Sign Out</SignOut>
+    </SignInSignUpWrapper>
+      {searchInput}
+    </React.Fragment>
+  ) : (
+    <React.Fragment>
+    <SignInSignUpWrapper>
       <SignInForm
         passwordReset={handleSendPasswordReset}
         passwordResetError={passwordResetError}
@@ -760,29 +781,33 @@ const App = () => {
         modalDismiss={shouldDismissModal}
       />
       or
-      <SignUpForm modalDismiss={shouldDismissModal} handleSignUpCallback={handleSignUp} signUpError={signUpError} />
-    </FormContainer>
+      <SignUpForm
+        modalDismiss={shouldDismissModal}
+        handleSignUpCallback={handleSignUp}
+        signUpError={signUpError}
+      />
+      </SignInSignUpWrapper>
+      {searchInput}
+      </React.Fragment>
   );
 
-  const addMovie = isSignedIn &&
+  const addMovie = isSignedIn && (
     <AddMovie
       handleAddMovieCallback={handleAddMovie}
       alreadyAdded={alreadyAdded}
       notFound={notFound}
     />
+  );
 
-  const displayUser = currUser && currUser !== 'Guest' ? (
-    <WelcomeMsg>
-      &nbsp;Hello, {currUser}
-    </WelcomeMsg>
-  ) : null;
+  const displayUser =
+    currUser && currUser !== 'Guest' ? <WelcomeMsg>&nbsp;Hello, {currUser}</WelcomeMsg> : null;
 
   let modalContent = (
     <NoWatchListMsg>You have not yet added any movies to your watchlist.</NoWatchListMsg>
   );
   if (watchList && watchList.length > 0) {
-    const watchListData = movieData.filter(movie => watchList.includes(movie.title));
-    modalContent = watchListData.map(movie => (
+    const watchListData = movieData.filter((movie) => watchList.includes(movie.title));
+    modalContent = watchListData.map((movie) => (
       <Movie
         key={movie.id}
         {...movie}
@@ -798,7 +823,7 @@ const App = () => {
 
   const watchlist = (
     <ToggleContent
-      toggle={show => (
+      toggle={(show) => (
         <div onClick={() => setShouldArrowAnimate(true)}>
           <WatchListContainer onClick={show}>
             <h4 style={{ margin: '0' }}>My watchlist</h4>
@@ -808,8 +833,12 @@ const App = () => {
           </WatchListContainer>
         </div>
       )}
-      content={hide => (
-        <MyModal modalDismissedCallback={() => setShouldArrowAnimate(false)} hide={hide} override={shouldDismissModal}>
+      content={(hide) => (
+        <MyModal
+          modalDismissedCallback={() => setShouldArrowAnimate(false)}
+          hide={hide}
+          override={shouldDismissModal}
+        >
           <ModalContainer>{modalContent}</ModalContainer>
         </MyModal>
       )}
@@ -818,47 +847,44 @@ const App = () => {
 
   return (
     <div className="App">
-    {message}
-    <TitleContainer className="titleContainer">
-        <Flex>
-        {signInSignUpSignOutSearch}
+      {message}
+      <TitleContainer className="titleContainer">
+        <FlexHeader>
+          {signInSignUpSignOutSearch}
+          {displayUser}
+          {watchlist}
+        </FlexHeader>
+        <FlexHeader>
           <Flex>
-            {displayUser}
-            {watchlist}
+            <Title data-testid="title">Movies to watch</Title>
+          <SortFlex>
+            <Sort>
+              <SelectMenuTitle data-testid="editorsPicksTitle">Editors' Picks:</SelectMenuTitle>
+              <Select onChange={(e) => setFilterSelected(e.target.value)}>
+                <option value="">All</option>
+                {users.map((user) => (
+                  <option key={user} value={user}>
+                    {user}
+                  </option>
+                ))}
+              </Select>
+            </Sort>
+            <Sort>
+              <SelectMenuTitle data-testid="sortTitle">Sort by:</SelectMenuTitle>
+              <Select onChange={(e) => setSortSelected(e.target.value)}>
+                <option value="dateAdded">Recently Added</option>
+                <option value="avgRating">Top Rated</option>
+                <option value="releaseYear">Release Year</option>
+                <option value="title">Titles A-Z</option>
+              </Select>
+            </Sort>
+          </SortFlex>
           </Flex>
-        </Flex>
-        <Flex>
-          <Flex>
-            <Title data-testid="title">Movies to watch!</Title>
-          </Flex>
-            <SortFlex>
-              <Sort>
-                <SelectMenuTitle data-testid="editorsPicksTitle">Editors' Picks:</SelectMenuTitle>
-                <Select onChange={e => setFilterSelected(e.target.value)}>
-                  <option value="">All</option>
-                  {users.map(user => (
-                    <option key={user} value={user}>
-                      {user}
-                    </option>
-                  ))}
-                </Select>
-              </Sort>
-              <Sort>
-                <SelectMenuTitle data-testid="sortTitle">Sort by:</SelectMenuTitle>
-                <Select onChange={e => setSortSelected(e.target.value)}>
-                  <option value="dateAdded">Recently Added</option>
-                  <option value="avgRating">Top Rated</option>
-                  <option value="releaseYear">Release Year</option>
-                  <option value="title">Titles A-Z</option>
-                </Select>
-              </Sort>
-            </SortFlex>
-        </Flex>
+        </FlexHeader>
       </TitleContainer>
       <Main data-testid="main">
         {addMovie}
         {currentlyViewing}
-        {movieData.length > limit && loadMoreButton}
       </Main>
     </div>
   );

@@ -21,7 +21,7 @@ const Form = styled.form`
   flex-direction: column;
   border: 2px solid black;
   padding: 2rem;
-  margin: 1rem;
+  margin: 1rem 1rem 2rem 1rem;
   background: lavender;
 `;
 

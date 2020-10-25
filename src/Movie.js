@@ -199,10 +199,12 @@ const Movie = ({
 };
 
 export default styled(Movie)`
-  border: 2px solid black;
+  border: 1px solid gray;
+  box-shadow: 3px 4px 10px -6px rgba(0,0,0,0.66);
   padding: 2rem;
+  border-radius: 8px;
   background: papayawhip;
-  margin: 1rem;
+  margin: 1rem 0 1rem 0;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
