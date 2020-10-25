@@ -34,9 +34,9 @@ const Submit = styled.input`
 `;
 
 const TextInput = styled.input`
-  height: 18px;
+  height: 35px;
   padding: 0.5rem;
-  border: 1px solid ${props => props.notReady ? 'red' : 'black'};
+  border: 1px solid ${props => props.notReady ? 'black' : 'green'};
   font-family: Futura;
   font-weight: bold;
   margin-top: 10px;
@@ -45,7 +45,7 @@ const TextInput = styled.input`
 const Icon = styled(FontAwesomeIcon)`
   position: absolute;
   right: 5%;
-  bottom: -20%;
+  bottom: 10px;
   &:hover {
     cursor: pointer;
   }

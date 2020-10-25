@@ -37,7 +37,7 @@ const Submit = styled.input`
 `;
 
 const TextInput = styled.input`
-  height: 18px;
+  height: 35px;
   padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;

@@ -31,7 +31,7 @@ const TitleContainer = styled.div`
   justify-content: flex-start;
 `;
 
-const Title = styled.h1`
+const Title = styled.h2`
   margin: 0 1rem 0 0;
 `;
 
@@ -186,7 +186,8 @@ const Search = styled.input`
   flex: 0.8;
   padding-left: 0.5em;
   font-family: Futura;
-  border: 1px solid black;
+  border: 1px solid grey;
+  border-radius: 8px;
   height: 2.5rem;
   /* margin-left: auto; */
   /* @media only screen and (min-width: 700px) {
