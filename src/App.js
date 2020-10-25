@@ -15,6 +15,7 @@ import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
 import { capitalize, toSearchString, regEx } from './helpers';
+import { useInView } from 'react-hook-inview'
 
 firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
@@ -205,7 +206,7 @@ const WelcomeMsg = styled.span`
   margin-right: 10px;
 `
 
-let renderCount = 0;
+// let renderCount = 0;
 const env = process.env.NODE_ENV;
 const isDev = (env === 'development');
 
@@ -240,9 +241,14 @@ const App = () => {
   const [finishedStorageCheck, setFinishedStorageCheck] = useState(false);
   const [hasRetrievedInitialMovieData, setHasRetrievedInitialMovieData] = useState(false);
 
+  const [loadMoreRef] = useInView({
+    onEnter: () => setTimeout(() => setLimit(limit => limit += 10), 300),
+    threshold: 1,
+  })
+
   if (isDev) {
-    renderCount +=1;
-    console.log('render count', renderCount);
+    // renderCount +=1;
+    // console.log('render count', renderCount);
   }
 
   firebase.auth().onAuthStateChanged(user => {
@@ -330,6 +336,24 @@ const App = () => {
       setTitles(movieData.map(movie => movie.title));
     }
   }, [movieData]);
+
+  useEffect(() => {
+    if (firebaseUserId && movieData && currUser !== 'Guest' && movieData.filter(movie => movie.creator === currUser).length <=1) {
+      const isActive = movieData.filter(movie => movie.creator === currUser).length !== 0;
+      db.collection('users')
+        .doc(firebaseUserId)
+        .update({ isActive })
+        .then(() => {
+          let newUsers;
+          if (isActive) newUsers = [currUser, ...users];
+          else newUsers = users.filter(user => user !== currUser);
+          setUsers(newUsers)
+        })
+        .catch(function(error) {
+          console.log('Error updating user active: ', error);
+        });
+    }
+  }, [users, firebaseUserId, currUser, hasRetrievedInitialMovieData, movieData])
 
 
   useEffect(() => {
@@ -496,7 +520,7 @@ const App = () => {
     await db
       .collection('users')
       .doc(id)
-      .update({ watchList: movies })
+      .set({ watchList: movies })
       .catch(function(error) {
         console.log('Error updating watchList: ', error);
       });
@@ -706,7 +730,7 @@ const App = () => {
 
   const loadMoreButton =
     !isLoading && limit <= movieData.length && mainData.length > 10 ? (
-      <LoadMore onClick={() => setLimit(limit => limit + 10)}>Load More ...</LoadMore>
+      <LoadMore ref={loadMoreRef}>Loading More ...</LoadMore>
     ) : null;
 
   const message = (
@@ -834,7 +858,7 @@ const App = () => {
       <Main data-testid="main">
         {addMovie}
         {currentlyViewing}
-        {loadMoreButton}
+        {movieData.length > limit && loadMoreButton}
       </Main>
     </div>
   );
