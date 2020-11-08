@@ -14,7 +14,7 @@ const Submit = styled.input`
 
 const TextInput = styled.input`
   margin-left: 1rem;
-  height: 24px;
+  height: 35px;
   padding: 0.5rem;
   border: 1px solid black;
   font-family: Futura;

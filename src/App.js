@@ -14,6 +14,7 @@ import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
+import ScrollArrow from './ScrollArrow';
 import { capitalize, toSearchString, regEx } from './helpers';
 // import { useInView } from 'react-hook-inview';
 
@@ -87,7 +88,10 @@ const SignInSignUpWrapper = styled.div`
 
 const SelectMenuTitle = styled.h4`
   width: 90px;
-  margin: 0 0 0 1em;
+  margin: 0;
+  @media only screen and (min-width: 700px) {
+    margin: 0 0 0 1em;
+  }
 `;
 
 const rotateLeft = keyframes`
@@ -118,7 +122,6 @@ const WatchListContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 130px;
   cursor: pointer;
 `;
 
@@ -183,16 +186,17 @@ const FlexHeader = styled(Flex)`
 `;
 
 const Search = styled.input`
-  flex: 0.8;
+  flex: 1;
   padding-left: 0.5em;
   font-family: Futura;
   border: 1px solid grey;
   border-radius: 8px;
   height: 2.5rem;
-  /* margin-left: auto; */
-  /* @media only screen and (min-width: 700px) {
+  margin: 0 0 0 10px;
+  @media only screen and (min-width: 700px) {
     max-width: 600px;
-  } */
+    margin: 0 5px 0 5px;
+  }
 `;
 
 const WelcomeMsg = styled.span`
@@ -384,8 +388,9 @@ const App = () => {
             setWatchList(watchListData);
           });
       }
-      getUsersAndWatchList().catch((error) => console.log('Error retrieving user data', error));
-      setIsLoading(false);
+      getUsersAndWatchList()
+      .catch((error) => console.log('Error retrieving user data', error))
+      .finally(() => setIsLoading(false));
     }
   }, [currUser, isLoading, hasRetrievedInitialMovieData]);
 
@@ -827,7 +832,7 @@ const App = () => {
       toggle={(show) => (
         <div onClick={() => setShouldArrowAnimate(true)}>
           <WatchListContainer onClick={show}>
-            <h4 style={{ margin: '0' }}>My watchlist</h4>
+            <h4 style={{ margin: '0 5px 0 0' }}>My watchlist</h4>
             <p>
               <DownArrow animate={shouldArrowAnimate}></DownArrow>
             </p>
@@ -886,6 +891,7 @@ const App = () => {
       <Main data-testid="main">
         {addMovie}
         {currentlyViewing}
+        <ScrollArrow/>
       </Main>
     </div>
   );
