@@ -182,7 +182,7 @@ const SortFlex = styled(Flex)`
 
 const FlexHeader = styled(Flex)`
   width: 100%;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.5rem 0;
 `;
 
 const Search = styled.input`
@@ -806,7 +806,7 @@ const App = () => {
   );
 
   const displayUser =
-    currUser && currUser !== 'Guest' ? <WelcomeMsg>&nbsp;Hello, {currUser}</WelcomeMsg> : null;
+    currUser && <WelcomeMsg>&nbsp;Hello, {currUser}</WelcomeMsg>;
 
   let modalContent = (
     <NoWatchListMsg>You have not yet added any movies to your watchlist.</NoWatchListMsg>
@@ -832,7 +832,7 @@ const App = () => {
       toggle={(show) => (
         <div onClick={() => setShouldArrowAnimate(true)}>
           <WatchListContainer onClick={show}>
-            <h4 style={{ margin: '0 5px 0 0' }}>My watchlist</h4>
+            <h4 style={{ margin: '0 0.5rem 0 0' }}>My watchlist</h4>
             <p>
               <DownArrow animate={shouldArrowAnimate}></DownArrow>
             </p>

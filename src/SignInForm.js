@@ -10,7 +10,7 @@ const Title = styled.h4`
 `;
 
 const SignInText = styled.div`
-  margin-right: 1rem;
+  margin-right: 0.5rem;
   text-decoration: underline;
   cursor: pointer;
 `;

@@ -17,7 +17,7 @@ const Title = styled.h4`
 `;
 
 const SignUpText = styled.div`
-  margin: 0 0 0 1rem;
+  margin: 0 0 0 0.5rem;
   text-decoration: underline;
   cursor: pointer;
 `;
