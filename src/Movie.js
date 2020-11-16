@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import checkmark from './assets/checkmark.png';
 import { toSearchString } from './helpers';
@@ -33,8 +33,8 @@ const PosterContainer = styled.div`
   cursor: pointer;
   position: relative;
   flex-basis: 1 1 45%;
-  padding: 0 10px 0 10px;
-  &:hover {
+  margin: 0 10px 0 10px;
+  &:hover, &:focus, &:active {
     .overlay {
       opacity: 1;
     }
@@ -53,7 +53,7 @@ const Overlay = styled.div`
   position: absolute;
   top: 100px;
   background: rgba(0, 0, 0, 0.5); /* Black see-through */
-  width: 70%;
+  width: 100%;
   transition: 0.5s ease;
   opacity: 0;
   color: white;
@@ -64,12 +64,23 @@ const Overlay = styled.div`
 
 const WatchTrailerText = styled.p`
   text-decoration: underline;
-`
+`;
 
 const YouTubeLink = styled.a`
   text-decoration: none;
   color: black;
+`;
+
+const Ellipses = styled.button`
+  cursor: pointer;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 1px 5px 1px 5px;
+  background-color: inherit;
+  margin-left: 5px;
 `
+
+const FIRST_PLOT_STRING_OFFSET = 75;
 
 const Movie = ({
   className,
@@ -88,8 +99,11 @@ const Movie = ({
   onAddToWatchlistCallback,
   onRemoveFromWatchlistCallback,
   isSignedIn,
-  isModal
+  isModal,
 }) => {
+
+  const [plotStringOffset, setPlotStringOffset] = useState(FIRST_PLOT_STRING_OFFSET);
+
   function createYoutubeSearchLink() {
     const releaseYear = year.substr(-4, 4);
     let detailSearchString = toSearchString(title);
@@ -103,28 +117,19 @@ const Movie = ({
   }
 
   const addToWatchlist = !isModal && (
-    <AddToWatchlist
-      data-testid="addButton"
-      onClick={() => onAddToWatchlistCallback({ title, id })}
-    >
+    <AddToWatchlist data-testid="addButton" onClick={() => onAddToWatchlistCallback({ title, id })}>
       Add To Watchlist
     </AddToWatchlist>
   );
 
   const deleteButton = isModal ? (
-    <Delete
-      data-testid="removeButton"
-      onClick={() => onRemoveFromWatchlistCallback({ title, id })}
-    >
+    <Delete data-testid="removeButton" onClick={() => onRemoveFromWatchlistCallback({ title, id })}>
       Remove From Watchlist
     </Delete>
   ) : (
     isSignedIn &&
     (currUser === 'Andrew' || currUser === creator) && (
-      <Delete
-        data-testid="deleteButton"
-        onClick={() => onDeleteMovieCallback({ title, id })}
-      >
+      <Delete data-testid="deleteButton" onClick={() => onDeleteMovieCallback({ title, id })}>
         Delete Movie
       </Delete>
     )
@@ -145,6 +150,21 @@ const Movie = ({
       </YouTubeLink>
     ) : null;
 
+  const truncatedPlot = 
+    plot
+    .split(' ')
+    .splice(0,plotStringOffset)
+    .join(' ');
+  
+  let ellipses = null;
+  const isExpanded = plot.length !== FIRST_PLOT_STRING_OFFSET && plotStringOffset === plot.length;
+
+  if (truncatedPlot.length < plot.length || isExpanded) {
+    const newOffset = isExpanded ? FIRST_PLOT_STRING_OFFSET : plot.length;
+    const chars = isExpanded ? "^^^" : "...";
+    ellipses = <Ellipses isExpanded={isExpanded} onClick={() => setPlotStringOffset(newOffset)}><span>{chars}</span></Ellipses>
+  }
+
   return (
     <div className={className}>
       <div style={{ flex: '1 1 55%' }}>
@@ -159,17 +179,20 @@ const Movie = ({
           {directorDisplay}
           {actorsDisplay}
         </ul>
-        <section>{plot}</section>
+        <section>
+          {truncatedPlot}
+          {ellipses}
+        </section>
         <div
           style={{
             fontStyle: 'italic',
             fontSize: '0.9em',
             width: '200px',
             marginTop: '1em',
-            marginBottom: '1em'
+            marginBottom: '1em',
           }}
         >
-          {ratings.map(rating => {
+          {ratings.map((rating) => {
             if (rating.Source === 'Internet Movie Database') {
               rating.Source = 'IMDb';
             }
@@ -185,7 +208,7 @@ const Movie = ({
               display: 'flex',
               alignItems: 'center',
               fontStyle: 'normal',
-              fontSize: '0.9em'
+              fontSize: '0.9em',
             }}
           >
             <img alt="checkmark" src={checkmark} style={{ width: '20px' }} />
@@ -200,7 +223,7 @@ const Movie = ({
 
 export default styled(Movie)`
   border: 1px solid gray;
-  box-shadow: 3px 4px 10px -6px rgba(0,0,0,0.66);
+  box-shadow: 3px 4px 10px -6px rgba(0, 0, 0, 0.66);
   padding: 2rem;
   border-radius: 8px;
   background: papayawhip;

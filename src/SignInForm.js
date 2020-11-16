@@ -52,7 +52,6 @@ const Error = styled.p`
 
 const SignIn = ({ modalDismiss, passwordReset, passwordResetError, handleSignInCallback, signInError }) => {
 
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 

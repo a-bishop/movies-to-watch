@@ -1,4 +1,6 @@
 import React from 'react';
+import { useMediaQuery } from 'react-responsive'
+
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import ClickOutsideDismiss from './ClickOutsideDismiss';
@@ -16,12 +18,12 @@ const ModalWrapper = styled.div`
   left: 50%;
   transform: translate(-50%, -50%) !important;
   overflow-y: auto;
-  max-height: 70vh;
   width: 30%;
   min-width: 400px;
   background-color: white;
   padding: 2em;
   z-index: 2;
+  ${props => props.isMobile && `height: 85vh`}
 `;
 
 const ModalFullScreenContainer = styled.div`
@@ -43,15 +45,18 @@ const Dismiss = styled.span`
   opacity: 0.6;
 `;
 
-const MyModal = props =>
-  ReactDOM.createPortal(
+const MyModal = props => {
+
+  const isMobile = useMediaQuery({ maxHeight: 800 });
+
+  return ReactDOM.createPortal(
     <ClickOutsideDismiss
       dismiss={props.hide}
       modalDismissedCallback={props.modalDismissedCallback}
       override={props.override}
     >
       <ModalFullScreenContainer className="modalContainer">
-        <ModalWrapper>
+        <ModalWrapper isMobile={isMobile}>
           <div
             style={{
               display: 'flex',
@@ -68,4 +73,5 @@ const MyModal = props =>
     </ClickOutsideDismiss>,
     document.getElementById('modal-root')
   );
+}
 export default MyModal;
