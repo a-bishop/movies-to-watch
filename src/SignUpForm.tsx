@@ -36,7 +36,7 @@ const Submit = styled.input`
 const TextInput = styled.input`
   height: 35px;
   padding: 0.5rem;
-  border: 1px solid ${props => props.notReady ? 'black' : 'green'};
+  border: 1px solid ${(props: {invalid: boolean}) => props.invalid ? 'black' : 'green'};
   font-family: Futura;
   font-weight: bold;
   margin-top: 10px;
@@ -72,6 +72,8 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
 
+  const invalid = name.length <= 3 || name === 'Guest' || password.length <= 3 || !email.match(/^[^@\s]+@[^@\s.]+.[^@.\s]+$/);
+  
   function handleSetEmail(e) {
     setEmail(e.target.value);
   }
@@ -86,11 +88,8 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
 
   function handleSignUp(e) {
     e.preventDefault();
-    handleSignUpCallback(name, email, password);
+    if (!invalid) handleSignUpCallback(name, email, password);
   }
-
-  const notReady = name.length <= 3 || password.length <= 3 || !email.match(/^[^@\s]+@[^@\s.]+.[^@.\s]+$/);
-  const ready = !notReady;
 
   return (
     <ToggleContent
@@ -101,20 +100,19 @@ const SignUp = ({ modalDismiss, handleSignUpCallback, signUpError }) => {
             <Form className="Form" onSubmit={handleSignUpCallback}>
               <Title>Sign up</Title>
               <label htmlFor="email">First Name:</label>
-              <TextInput notReady={name.length <= 3} type="name" id="name" onChange={handleSetName} value={name} />
+              <TextInput invalid={name.length <= 3} type="name" id="name" onChange={handleSetName} value={name} />
               <div style={{ marginTop: '10px' }}>
               <label htmlFor="email">Email:</label>
               </div>
-              <TextInput notReady={!email.match(/^[^@\s]+@[^@\s.]+.[^@.\s]+$/)} type="email" id="email" onChange={handleSetEmail} value={email} />
+              <TextInput invalid={!email.match(/^[^@\s]+@[^@\s.]+.[^@.\s]+$/)} type="email" id="email" onChange={handleSetEmail} value={email} />
               <div style={{ marginTop: '10px' }}>
                 <label htmlFor="password">Choose a Password:</label>
               </div>
-              <TextInput notReady={password.length <= 3} id="password" type={showPassword ? "text" : "password"} onChange={handleSetPassword} value={password} />
+              <TextInput invalid={password.length <= 3} id="password" type={showPassword ? "text" : "password"} onChange={handleSetPassword} value={password} />
               <div style={{position: 'relative'}}>
                 <Icon onClick={() => setShowPassword(bool => !bool)} icon={showPassword ? faEye : faEyeSlash} />
               </div>
-              {notReady && <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!" disabled/>}
-              {ready && <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!"/>}
+              <Submit className="Submit" onClick={handleSignUp} type="submit" value="Sign Up!" disabled={notReady} />}
               <br />
               <Error>{signUpError}</Error>
             </Form>

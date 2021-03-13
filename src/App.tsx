@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
+import * as storage from './storage';
 // import testData from './test-data';
 import firebase from 'firebase/app';
 import config from './config';
@@ -16,7 +17,7 @@ import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
 import ScrollArrow from './ScrollArrow';
 import { capitalize, toSearchString, regEx } from './helpers';
-// import { useInView } from 'react-hook-inview';
+import { IMovie } from './Types';
 
 firebase.initializeApp(config.FIREBASE);
 const db = firebase.firestore();
@@ -77,15 +78,6 @@ const SignInSignUpWrapper = styled.div`
   display: flex;
 `
 
-// const LoadMore = styled.div`
-//   background: darkKhaki;
-//   border: 2px solid black;
-//   text-align: center;
-//   margin: 1rem;
-//   padding: 1rem;
-//   cursor: pointer;
-// `;
-
 const SelectMenuTitle = styled.h4`
   width: 90px;
   margin: 0;
@@ -109,8 +101,8 @@ const DownArrow = styled.i`
   display: inline-block;
   padding: 3px;
   transform: rotate(45deg);
-  ${(props) => {
-    if (props.animate)
+  ${({ animate }: {animate: boolean }) => {
+    if (animate)
       return css`
         animation: ${rotateLeft} 0.25s linear;
         animation-fill-mode: forwards;
@@ -136,7 +128,7 @@ const MessageContainer = styled.div`
   transform: translate(-50%, 0);
   border-radius: 5px;
   z-index: 3;
-  ${(props) => {
+  ${(props: { type: 'error' | 'warn' | 'alert' }) => {
     let color = 'rgba(201, 226, 222, 0.9)';
     if (!props.type) return;
     else {
@@ -210,135 +202,114 @@ const env = process.env.NODE_ENV;
 const isDev = env === 'development';
 
 const App = () => {
-  const [titles, setTitles] = useState([]);
-  const [movieData, setMovieData] = useState([]); //env === 'development' ? testData :
+  const [movieData, setMovieData] = useState<IMovie[]>([]); //env === 'development' ? testData :
   const [notFound, setNotFound] = useState(false);
   const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [newMovieAdded, setNewMovieAdded] = useState('');
   const [movieToDelete, setMovieToDelete] = useState('');
   const [isLoading, setIsLoading] = useState(true); // env === 'development' ? false :
-  const [isSignedIn, setIsSignedIn] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
   const [passwordResetError, setPasswordResetError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
   const [messageType, setMessageType] = useState(null);
   const [sortSelected, setSortSelected] = useState('');
-  const [currUser, setCurrUser] = useState('');
+  const [currUser, setCurrUser] = useState<string>('Guest');
   const [filterSelected, setFilterSelected] = useState('');
-  // const [limit, setLimit] = useState(10);
-  const [users, setUsers] = useState([]);
-  const [watchList, setWatchList] = useState([]);
+  const [users, setUsers] = useState<string[]>([]);
+  const [watchList, setWatchList] = useState<string[]>([]);
   const [movieAddedToWatchList, setMovieAddedToWatchList] = useState(false);
   const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [shouldDismissModal, setShouldDismissModal] = useState(false);
-  const [firebaseUserId, setFirebaseUserId] = useState(null);
-  const [moviesLastUpdatedAt, setMoviesLastUpdatedAt] = useState(null);
-  const [shouldFetchMovies, setShouldFetchMovies] = useState(false);
-  const [finishedStorageCheck, setFinishedStorageCheck] = useState(false);
-  const [hasRetrievedInitialMovieData, setHasRetrievedInitialMovieData] = useState(false);
-
-  // const [loadMoreRef] = useInView({
-  //   onEnter: () => setTimeout(() => setLimit((limit) => (limit += 10)), 300),
-  //   threshold: 1,
-  // });
+  const [firebaseUserId, setFirebaseUserId] = useState<string|null>(null);
 
   if (isDev) {
     // renderCount +=1;
     // console.log('render count', renderCount);
   }
 
+  const isSignedIn = currUser !== 'Guest';
+  const titles = movieData.map(d => d.title);
+
   firebase.auth().onAuthStateChanged((user) => {
     const currentUser = firebase.auth().currentUser;
-    if (user && user.emailVerified) {
-      setIsSignedIn(true);
-      setCurrUser(currentUser.displayName);
-    } else {
-      setIsSignedIn(false);
-      setCurrUser('Guest');
-    }
+    user?.emailVerified && setCurrUser(currentUser?.displayName ?? 'Guest');
   });
 
+  // Get Movies
   useEffect(() => {
-    async function checkFBLastUpdated() {
-      let firebaseMoviesLastUpdated;
-      const storageMoviesLastUpdated = localStorage.getItem('moviesLastUpdatedAt');
+    async function checkFreshnessAndFetchMovies() {
+      let storageLastUpdated = storage.local.getItem('moviesLastUpdatedAt') ?? 0;
+      let fbMoviesLastUpdated = 1;
       await db
         .collection('meta')
         .doc('lastUpdated')
         .get()
-        .then((doc) => {
-          const lastUpdated = doc.data();
-          firebaseMoviesLastUpdated = lastUpdated.movies;
-        })
-        .catch((e) => {
-          console.error(e);
-          return;
-        });
-      if (!storageMoviesLastUpdated || firebaseMoviesLastUpdated > storageMoviesLastUpdated) {
-        setShouldFetchMovies(true);
+        .then(doc => fbMoviesLastUpdated = doc.data()?.movies ?? 1)
+        .catch(e => console.error(e));
+      if (fbMoviesLastUpdated > +storageLastUpdated) {
+          if (isDev) console.log('getting from remote');
+          await db.collection('movies')
+            .orderBy('created', 'desc')
+            .get()
+            .then((res) => {
+                let data: IMovie[] = [];
+                res?.forEach((doc) => {
+                    const docData = doc.data();
+                    const id = doc.id;
+                    const avgRating = getAvgRatings(docData.ratings);
+                    const allData: any = { ...docData, id, avgRating };
+                    data.push(allData);
+                });
+                setMovieData(data);
+            })
+            .catch((e) => console.error(e));
       }
-      setMoviesLastUpdatedAt(firebaseMoviesLastUpdated);
-      setFinishedStorageCheck(true);
+      storage.local.setItem('moviesLastUpdatedAt', JSON.stringify(fbMoviesLastUpdated));
     }
-    checkFBLastUpdated();
+
+    checkFreshnessAndFetchMovies()
+      .catch(e => console.error(e));
+  }, []);
+
+  // Get Users and Watchlist
+  useEffect(() => {
+    async function checkFreshnessAndFetchUsers() {
+      let activeUsers: string[] = [];
+      let watchListData: string[] = [];
+      if (currUser === 'Guest') {
+          watchListData = [JSON.parse(storage.local.getItem('watchList') ?? '')];
+      }
+      await db
+        .collection('users')
+        .get()
+        .then(async (querySnapshot) => {
+            await querySnapshot.forEach((user) => {
+                const data = user.data();
+                if (data.isActive) activeUsers.push(data.displayName);
+                if (currUser === data.displayName) {
+                    if (data.watchList) {
+                        data.watchList.forEach((title: string) => watchListData.push(title));
+                    }
+                }
+            });
+            setUsers(activeUsers);
+            setWatchList(watchListData);
+        });
+    }
+
+    checkFreshnessAndFetchUsers()
+      .catch(e => console.error(e));
   }, []);
 
   useEffect(() => {
-    if (moviesLastUpdatedAt)
-      localStorage.setItem('moviesLastUpdatedAt', JSON.stringify(moviesLastUpdatedAt));
-    if (movieData && movieData.length) localStorage.setItem('movieData', JSON.stringify(movieData));
-    if (!isLoading && movieAddedToWatchList)
-      localStorage.setItem('watchList', JSON.stringify(watchList));
-  }, [movieData, moviesLastUpdatedAt, isLoading, watchList, movieAddedToWatchList]);
-
-  useEffect(() => {
-    if (finishedStorageCheck) {
-      if (shouldFetchMovies) {
-        async function getMovies() {
-          if (isDev) console.log('getting from remote');
-          db.collection('movies')
-            .orderBy('created', 'desc')
-            .get()
-            .then((querySnapshot) => {
-              let data = [];
-              let movieTitles = [];
-              if (!querySnapshot) console.log('error getting movies');
-              else {
-                querySnapshot.forEach((doc) => {
-                  const docData = doc.data();
-                  const id = doc.id;
-                  const avgRating = getAvgRatings(docData.ratings);
-                  const allData = { ...docData, id, avgRating };
-                  data.push(allData);
-                  movieTitles.push(docData.title);
-                });
-                setMovieData(data);
-              }
-            })
-            .catch((e) => {
-              console.error(e);
-            });
-        }
-
-        getMovies()
-          .then(setHasRetrievedInitialMovieData(true))
-          .catch((error) => console.log('Error retrieving movie data', error));
-      } else {
-        if (isDev) console.log('getting from storage');
-        setMovieData(JSON.parse(localStorage.getItem('movieData')));
-        setSortSelected('dateAdded');
-        setHasRetrievedInitialMovieData(true);
-      }
-    }
-  }, [shouldFetchMovies, finishedStorageCheck]);
-
-  useEffect(() => {
-    if (movieData && movieData.length) {
-      setTitles(movieData.map((movie) => movie.title));
-    }
+    movieData?.length && storage.local.setItem('movieData', JSON.stringify(movieData));
   }, [movieData]);
+
+  useEffect(() => {
+    watchList?.length && storage.local.setItem('watchList', JSON.stringify(watchList));
+  }, [watchList]);
 
   useEffect(() => {
     if (
@@ -347,52 +318,18 @@ const App = () => {
       currUser !== 'Guest' &&
       movieData.filter((movie) => movie.creator === currUser).length <= 1
     ) {
-      const isActive = movieData.filter((movie) => movie.creator === currUser).length !== 0;
+      // set the user to active or inactive depending on whether they are adding their first film or removing their last film
+      const isActive = movieData.filter(movie => movie.creator === currUser).length !== 0;
       db.collection('users')
         .doc(firebaseUserId)
         .update({ isActive })
         .then(() => {
-          let newUsers;
-          if (isActive) newUsers = [currUser, ...users];
-          else newUsers = users.filter((user) => user !== currUser);
+          const newUsers = isActive ? [currUser, ...users] : users.filter((user) => user !== currUser);
           setUsers(newUsers);
         })
-        .catch(function (error) {
-          console.log('Error updating user active: ', error);
-        });
+        .catch(e => console.log('Error updating user active: ', e));
     }
-  }, [users, firebaseUserId, currUser, hasRetrievedInitialMovieData, movieData]);
-
-  useEffect(() => {
-    if (isLoading && currUser && hasRetrievedInitialMovieData) {
-      async function getUsersAndWatchList() {
-        let activeUsers = [];
-        let watchListData = [];
-        if (currUser === 'Guest') {
-          watchListData = JSON.parse(localStorage.getItem('watchList')) || [];
-        }
-        await db
-          .collection('users')
-          .get()
-          .then(async (querySnapshot) => {
-            await querySnapshot.forEach((user) => {
-              const data = user.data();
-              if (data.isActive) activeUsers.push(data.displayName);
-              if (currUser === data.displayName) {
-                if (data.watchList) {
-                  data.watchList.forEach((movie) => watchListData.push(movie));
-                }
-              }
-            });
-            setUsers(activeUsers);
-            setWatchList(watchListData);
-          });
-      }
-      getUsersAndWatchList()
-      .catch((error) => console.log('Error retrieving user data', error))
-      .finally(() => setIsLoading(false));
-    }
-  }, [currUser, isLoading, hasRetrievedInitialMovieData]);
+  }, [firebaseUserId, movieData, currUser]);
 
   // Gets the average rating from ratings systems
   // ie. IMdB, Rotten Tomatoes and Metacritic
