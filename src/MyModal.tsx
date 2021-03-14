@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMediaQuery } from 'react-responsive'
+import { useMediaQuery } from 'react-responsive';
 
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
@@ -12,7 +12,7 @@ const ModalStyle = styled.div`
   width: 100%;
 `;
 
-const ModalWrapper = styled.div`
+const ModalWrapper = styled.div<{ isMobile: boolean }>`
   position: fixed;
   top: 50%;
   left: 50%;
@@ -23,7 +23,7 @@ const ModalWrapper = styled.div`
   background-color: white;
   padding: 2em;
   z-index: 2;
-  ${props => props.isMobile && `height: 85vh`}
+  ${({ isMobile }) => isMobile && `height: 85vh`}
 `;
 
 const ModalFullScreenContainer = styled.div`
@@ -45,33 +45,38 @@ const Dismiss = styled.span`
   opacity: 0.6;
 `;
 
-const MyModal = props => {
-
-  const isMobile = useMediaQuery({ maxHeight: 800 });
-
-  return ReactDOM.createPortal(
-    <ClickOutsideDismiss
-      dismiss={props.hide}
-      modalDismissedCallback={props.modalDismissedCallback}
-      override={props.override}
-    >
-      <ModalFullScreenContainer className="modalContainer">
-        <ModalWrapper isMobile={isMobile}>
-          <div
-            style={{
-              display: 'flex',
-              width: '100%',
-              justifyContent: 'flex-end',
-              marginBottom: '10px'
-            }}
-          >
-            <Dismiss className="dismissButton">X</Dismiss>
-          </div>
-          <ModalStyle>{props.children}</ModalStyle>
-        </ModalWrapper>
-      </ModalFullScreenContainer>
-    </ClickOutsideDismiss>,
-    document.getElementById('modal-root')
-  );
+interface Props {
+  children: React.ReactNode;
+  hide: () => void;
+  modalDismissedCallback: () => void;
+  override: boolean;
 }
+
+const MyModal = ({ children, hide, modalDismissedCallback, override }: Props) => {
+  const isMobile = useMediaQuery({ maxHeight: 800 });
+  const root = document.getElementById('modal-root');
+
+  return root
+    ? ReactDOM.createPortal(
+        <ClickOutsideDismiss dismiss={hide} modalDismissedCallback={modalDismissedCallback} override={override}>
+          <ModalFullScreenContainer className="modalContainer">
+            <ModalWrapper isMobile={isMobile}>
+              <div
+                style={{
+                  display: 'flex',
+                  width: '100%',
+                  justifyContent: 'flex-end',
+                  marginBottom: '10px',
+                }}
+              >
+                <Dismiss className="dismissButton">X</Dismiss>
+              </div>
+              <ModalStyle>{children}</ModalStyle>
+            </ModalWrapper>
+          </ModalFullScreenContainer>
+        </ClickOutsideDismiss>,
+        root
+      )
+    : null;
+};
 export default MyModal;

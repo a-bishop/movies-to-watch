@@ -1,24 +1,29 @@
 import React, { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-function useClickOutsideDismiss(ref, dismiss, callback, override) {
+interface Props {
+  children: React.ReactNode;
+  dismiss: () => void;
+  modalDismissedCallback: () => void;
+  override: boolean;
+}
 
+function useClickOutsideDismiss(
+  ref: React.RefObject<HTMLElement>,
+  dismiss: Props['dismiss'],
+  callback: Props['modalDismissedCallback'],
+  override: Props['override']
+) {
   useEffect(() => {
     if (override) {
       dismiss();
       callback();
     }
-  }, [override, callback, dismiss])
+  }, [override, callback, dismiss]);
 
-  function handleClickOutside(event) {
+  function handleClickOutside(event: any) {
     const className = event.target.className;
-    if (
-      className &&
-      typeof className === 'string' &&
-      ref.current &&
-      (className.includes('modalContainer') ||
-        className.includes('dismissButton'))
-    ) {
+    if (className && typeof className === 'string' && ref.current && (className.includes('modalContainer') || className.includes('dismissButton'))) {
       dismiss();
       callback();
     }
@@ -34,20 +39,15 @@ function useClickOutsideDismiss(ref, dismiss, callback, override) {
   });
 }
 
-function ClickOutsideDismiss(props) {
+function ClickOutsideDismiss({ children, dismiss, modalDismissedCallback, override }: Props) {
   const wrapperRef = useRef(null);
-  useClickOutsideDismiss(
-    wrapperRef,
-    props.dismiss,
-    props.modalDismissedCallback,
-    props.override
-  );
+  useClickOutsideDismiss(wrapperRef, dismiss, modalDismissedCallback, override);
 
-  return <div ref={wrapperRef}>{props.children}</div>;
+  return <div ref={wrapperRef}>{children}</div>;
 }
 
 ClickOutsideDismiss.propTypes = {
-  children: PropTypes.element.isRequired
+  children: PropTypes.element.isRequired,
 };
 
 export default ClickOutsideDismiss;

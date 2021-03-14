@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 
-const ToggleContent = ({ toggle, content }) => {
+interface Props {
+  toggle: (show: () => void) => void;
+  content: (hide: () => void) => void;
+}
+
+const ToggleContent = ({ toggle, content }: Props) => {
   const [isShown, setIsShown] = useState(false);
   const hide = () => setIsShown(false);
   const show = () => setIsShown(true);

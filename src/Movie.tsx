@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import checkmark from './assets/checkmark.png';
 import { toSearchString } from './helpers';
+import { IMovie } from './Types';
 
 const Title = styled.h3`
   margin: 0;
@@ -34,7 +35,9 @@ const PosterContainer = styled.div`
   position: relative;
   flex-basis: 1 1 45%;
   margin: 0 10px 0 10px;
-  &:hover, &:focus, &:active {
+  &:hover,
+  &:focus,
+  &:active {
     .overlay {
       opacity: 1;
     }
@@ -78,9 +81,20 @@ const Ellipses = styled.button`
   padding: 1px 5px 1px 5px;
   background-color: inherit;
   margin-left: 5px;
-`
+`;
 
 const FIRST_PLOT_STRING_OFFSET = 75;
+
+interface Props extends IMovie {
+  key?: string;
+  className?: string;
+  currUser: string;
+  onDeleteMovieCallback: () => void;
+  onAddToWatchlistCallback?: () => void;
+  onRemoveFromWatchlistCallback?: () => void;
+  isSignedIn: boolean;
+  isModal?: boolean;
+}
 
 const Movie = ({
   className,
@@ -99,48 +113,48 @@ const Movie = ({
   onAddToWatchlistCallback,
   onRemoveFromWatchlistCallback,
   isSignedIn,
-  isModal,
-}) => {
-
+  isModal = false,
+}: Props) => {
   const [plotStringOffset, setPlotStringOffset] = useState(FIRST_PLOT_STRING_OFFSET);
 
   function createYoutubeSearchLink() {
     const releaseYear = year.substr(-4, 4);
     let detailSearchString = toSearchString(title);
     if (director !== 'N/A') {
-      detailSearchString += `+${toSearchString(director)}`;
+      detailSearchString += `+${toSearchString(director ?? '')}`;
     } else {
-      detailSearchString += `+${toSearchString(actors)}`;
+      detailSearchString += `+${toSearchString(actors ?? '')}`;
     }
     let link = `https://www.youtube.com/results?search_query=${detailSearchString}+${releaseYear}+english+trailer`;
     return link;
   }
 
-  const addToWatchlist = !isModal && (
-    <AddToWatchlist data-testid="addButton" onClick={() => onAddToWatchlistCallback({ title, id })}>
+  const addToWatchlist = !isModal && onAddToWatchlistCallback && (
+    <AddToWatchlist data-testid="addButton" onClick={() => onAddToWatchlistCallback()}>
       Add To Watchlist
     </AddToWatchlist>
   );
 
-  const deleteButton = isModal ? (
-    <Delete data-testid="removeButton" onClick={() => onRemoveFromWatchlistCallback({ title, id })}>
-      Remove From Watchlist
-    </Delete>
-  ) : (
-    isSignedIn &&
-    (currUser === 'Andrew' || currUser === creator) && (
-      <Delete data-testid="deleteButton" onClick={() => onDeleteMovieCallback({ title, id })}>
-        Delete Movie
+  const deleteButton =
+    isModal && onRemoveFromWatchlistCallback ? (
+      <Delete data-testid="removeButton" onClick={() => onRemoveFromWatchlistCallback()}>
+        Remove From Watchlist
       </Delete>
-    )
-  );
+    ) : (
+      isSignedIn &&
+      (currUser === 'Andrew' || currUser === creator) && (
+        <Delete data-testid="deleteButton" onClick={() => onDeleteMovieCallback()}>
+          Delete Movie
+        </Delete>
+      )
+    );
 
   const genreDisplay = genre !== 'N/A' ? <li>{genre}</li> : null;
   const directorDisplay = director !== 'N/A' ? <li>{director}</li> : null;
   const actorsDisplay = actors !== 'N/A' ? <li>{actors}</li> : null;
 
   const posterImg =
-    poster !== 'N/A' ? (
+    poster !== 'N/A' && year ? (
       <YouTubeLink href={createYoutubeSearchLink()}>
         <PosterContainer>
           <Poster className="poster" alt={title} src={poster} width="180" />
@@ -150,19 +164,20 @@ const Movie = ({
       </YouTubeLink>
     ) : null;
 
-  const truncatedPlot = 
-    plot
-    .split(' ')
-    .splice(0,plotStringOffset)
-    .join(' ');
-  
   let ellipses = null;
-  const isExpanded = plot.length !== FIRST_PLOT_STRING_OFFSET && plotStringOffset === plot.length;
-
-  if (truncatedPlot.length < plot.length || isExpanded) {
-    const newOffset = isExpanded ? FIRST_PLOT_STRING_OFFSET : plot.length;
-    const chars = isExpanded ? "^^^" : "...";
-    ellipses = <Ellipses isExpanded={isExpanded} onClick={() => setPlotStringOffset(newOffset)}><span>{chars}</span></Ellipses>
+  let truncatedPlot = null;
+  if (plot) {
+    const isExpanded = plot.length !== FIRST_PLOT_STRING_OFFSET && plotStringOffset === plot.length;
+    truncatedPlot = plot.split(' ').splice(0, plotStringOffset).join(' ');
+    if (truncatedPlot.length < plot.length || isExpanded) {
+      const newOffset = isExpanded ? FIRST_PLOT_STRING_OFFSET : plot.length;
+      const chars = isExpanded ? '^^^' : '...';
+      ellipses = (
+        <Ellipses onClick={() => setPlotStringOffset(newOffset)}>
+          <span>{chars}</span>
+        </Ellipses>
+      );
+    }
   }
 
   return (
@@ -192,7 +207,7 @@ const Movie = ({
             marginBottom: '1em',
           }}
         >
-          {ratings.map((rating) => {
+          {ratings?.map((rating) => {
             if (rating.Source === 'Internet Movie Database') {
               rating.Source = 'IMDb';
             }

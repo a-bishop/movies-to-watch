@@ -25,7 +25,7 @@ const Form = styled.form`
   background: lavender;
 `;
 
-const Submit = styled.input`
+const Submit = styled.button`
   border: 1px solid black;
   border-radius: 5px;
   width: 40%;
@@ -50,47 +50,56 @@ const Error = styled.p`
   color: red;
 `;
 
-const SignIn = ({ modalDismiss, passwordReset, passwordResetError, handleSignInCallback, signInError }) => {
+interface Props {
+  modalDismiss: boolean;
+  passwordReset: (email: string) => void;
+  passwordResetError: string;
+  handleSignInCallback: (email: string, password: string) => void;
+  signInError: string;
+}
 
+const SignIn = ({ modalDismiss, passwordReset, passwordResetError, handleSignInCallback, signInError }: Props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  function handleSetEmail(e) {
+  function handleSetEmail(e: React.ChangeEvent<HTMLInputElement>) {
     setEmail(e.target.value);
   }
 
-  function handleSetPassword(e) {
+  function handleSetPassword(e: React.ChangeEvent<HTMLInputElement>) {
     setPassword(e.target.value);
   }
 
-  function handleSignIn(e) {
+  function handleSignIn(e: React.ChangeEvent<any>) {
     e.preventDefault();
     handleSignInCallback(email, password);
   }
 
   return (
     <ToggleContent
-      toggle={show => <SignInText onClick={show}>Sign In</SignInText>}
-      content={hide => (
+      toggle={(show) => <SignInText onClick={show}>Sign In</SignInText>}
+      content={(hide) => (
         <MyModal override={modalDismiss} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
-            <Form className="Form" onSubmit={handleSignInCallback}>
-              <PasswordResetForm shouldDismissModal={modalDismiss} passwordResetCallback={passwordReset} emailError={passwordResetError}/>
+            <Form className="Form">
+              <PasswordResetForm shouldDismissModal={modalDismiss} passwordResetCallback={passwordReset} emailError={passwordResetError} />
               <Title>Sign in to edit</Title>
-                <label htmlFor="email">Email:</label>
-                <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
-                <div style={{ marginTop: '10px' }}>
-                  <label htmlFor="password">Password:</label>
-                </div>
-                <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
-                <Submit className="Submit" onClick={handleSignIn} type="submit" value='Sign In' />
-                <br />
-                <Error>{signInError}</Error>
+              <label htmlFor="email">Email:</label>
+              <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
+              <div style={{ marginTop: '10px' }}>
+                <label htmlFor="password">Password:</label>
+              </div>
+              <TextInput type="password" id="password" onChange={handleSetPassword} value={password} />
+              <Submit className="Submit" onClick={handleSignIn} type="submit">
+                Sign In
+              </Submit>
+              <br />
+              <Error>{signInError}</Error>
             </Form>
           </div>
-      </MyModal>  
-    )}
-  />
+        </MyModal>
+      )}
+    />
   );
 };
 

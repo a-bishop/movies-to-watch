@@ -15,7 +15,7 @@ const ResetText = styled.div`
   cursor: pointer;
 `;
 
-const Submit = styled.input`
+const Submit = styled.button`
   border: 1px solid black;
   border-radius: 5px;
   background: papayawhip;
@@ -49,25 +49,31 @@ const Form = styled.form`
   background: darkkhaki;
 `;
 
-const PasswordReset = ({ shouldDismissModal, passwordResetCallback, emailError }) => {
+interface Props {
+  shouldDismissModal: boolean;
+  passwordResetCallback: (email: string) => void;
+  emailError: string;
+}
+
+const PasswordReset = ({ shouldDismissModal, passwordResetCallback, emailError }: Props) => {
   const [email, setEmail] = useState('');
 
-  function handleSetEmail(e) {
+  function handleSetEmail(e: React.ChangeEvent<HTMLInputElement>) {
     setEmail(e.target.value);
   }
 
-  function emailSend(e) {
+  function emailSend(e: React.ChangeEvent<any>) {
     e.preventDefault();
     passwordResetCallback(email);
   }
 
   return (
     <ToggleContent
-      toggle={show => <ResetText onClick={show}>Forgot Your Password?</ResetText>}
-      content={hide => (
+      toggle={(show) => <ResetText onClick={show}>Forgot Your Password?</ResetText>}
+      content={(hide) => (
         <MyModal override={shouldDismissModal} hide={hide} modalDismissedCallback={() => console.log('done')}>
           <div>
-            <Form className="Form" onSubmit={emailSend}>
+            <Form className="Form">
               <div
                 style={{
                   display: 'flex',
@@ -78,10 +84,12 @@ const PasswordReset = ({ shouldDismissModal, passwordResetCallback, emailError }
                 <Title>Password Reset</Title>
               </div>
               <div style={{ marginTop: '10px' }}>
-              <label htmlFor="email">Email:</label>
-              <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
+                <label htmlFor="email">Email:</label>
+                <TextInput type="email" id="email" onChange={handleSetEmail} value={email} />
               </div>
-              <Submit className="Submit" onClick={emailSend} type="submit" value="Send Reset Email" />
+              <Submit className="Submit" onClick={emailSend} type="submit">
+                Send Reset Email
+              </Submit>
               <br />
               <Error>{emailError}</Error>
             </Form>

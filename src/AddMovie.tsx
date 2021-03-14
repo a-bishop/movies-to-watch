@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import styled from "styled-components";
+import React, { useState } from 'react';
+import styled from 'styled-components';
 
 const Submit = styled.input`
   border: 1px solid black;
@@ -38,32 +38,38 @@ const Error = styled.p`
 const FlexChild = styled.div`
   display: grid;
   grid-template-columns: 40% 60%;
-`
+`;
 
 const Label = styled.label`
   /* width: 600px; */
-`
+`;
 
-const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
-  const [movie, setMovie] = useState("");
-  const [year, setYear] = useState("");
+interface Props {
+  handleAddMovieCallback: (title: string, year: string) => void;
+  notFound: boolean;
+  alreadyAdded: boolean;
+}
+
+const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }: Props) => {
+  const [movie, setMovie] = useState('');
+  const [year, setYear] = useState('');
   const [inputError, setInputError] = useState(false);
 
-  function handleSetMovie(e) {
+  function handleSetMovie(e: any) {
     setMovie(e.target.value);
   }
 
-  function handleSetYear(e) {
+  function handleSetYear(e: any) {
     setYear(e.target.value);
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: any) {
     e.preventDefault();
-    if (movie === "") {
+    if (movie === '') {
       setInputError(true);
       setTimeout(() => setInputError(false), 1500);
     } else {
-      handleAddMovieCallback([movie.toLowerCase(), year]);
+      handleAddMovieCallback(movie.toLowerCase(), year);
     }
   }
 
@@ -80,32 +86,20 @@ const AddMovie = ({ handleAddMovieCallback, notFound, alreadyAdded }) => {
 
   return (
     <>
-    <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
         <FlexChild>
-        <Label htmlFor="addMovie">Add Movie:</Label>
-        <TextInput
-          type="text"
-          id="addMovie"
-          onChange={handleSetMovie}
-          value={movie}
-        />
+          <Label htmlFor="addMovie">Add Movie:</Label>
+          <TextInput type="text" id="addMovie" onChange={handleSetMovie} value={movie} />
         </FlexChild>
-        <FlexChild >
+        <FlexChild>
           <Label htmlFor="year">Year (optional):</Label>
-          <TextInput
-            type="text"
-            id="year"
-            onChange={handleSetYear}
-            value={year}
-          />
+          <TextInput type="text" id="year" onChange={handleSetYear} value={year} />
         </FlexChild>
-        <FlexChild >
-        <Submit type="submit" value="Submit" />
+        <FlexChild>
+          <Submit type="submit" value="Submit" />
         </FlexChild>
-    </Form>
-    <div>
-    {error}
-    </div>
+      </Form>
+      <div>{error}</div>
     </>
   );
 };

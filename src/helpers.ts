@@ -1,13 +1,13 @@
-function capitalize(string) {
-  return string.replace(/\b\w/g, l => l.toUpperCase());
+function capitalize(s: string) {
+  return s.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-function toSearchString(string) {
-  return string.trim().replace(/ /g, '+');
+function toSearchString(s: string) {
+  return s.trim().replace(/ /g, '+');
 }
 
-function regEx(string) {
-  return new RegExp(string, 'i');
+function regEx(s: string) {
+  return new RegExp(s, 'i');
 }
 
 export { capitalize, toSearchString, regEx };
