@@ -679,7 +679,19 @@ const App = () => {
     </MessageContainer>
   ) : null;
 
-  const searchInput = <Search type="text" name="Search" placeholder="Search for a title" onChange={(e) => setSearchTerm(e.target.value)} />;
+  const searchInput = (
+    <Search
+      type="text"
+      name="Search"
+      placeholder="Search for a title"
+      value={searchTerm}
+      onChange={(e) => {
+        // prevent regex failures by removing '\' chars
+        const s = (e.target.value ?? '').replaceAll('\\', '');
+        setSearchTerm(s);
+      }}
+    />
+  );
 
   const signInSignUpSignOutSearch = isSignedIn ? (
     <React.Fragment>
