@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SyncLoader } from 'react-spinners';
 import styled, { css, keyframes } from 'styled-components';
 import * as storage from './storage';
-// import testData from './test-data';
 import firebase from 'firebase/app';
 import config from './config';
 import 'firebase/firestore';
@@ -16,9 +15,9 @@ import SignUpForm from './SignUpForm';
 import ToggleContent from './ToggleContent';
 import MyModal from './MyModal';
 import ScrollArrow from './ScrollArrow';
+import { testUserData, testMovieData } from './test-data';
 import { capitalize, toSearchString, regEx } from './helpers';
 import { IMovie } from './Types';
-import React from 'react';
 
 if (!firebase?.apps?.length) {
   firebase.initializeApp(config.FIREBASE);
@@ -203,33 +202,41 @@ const WelcomeMsg = styled.span`
 `;
 
 // let renderCount = 0;
-const env = process.env.NODE_ENV;
-const isDev = env === 'development';
+const useTestData = false; // set to true to prevent any fetching from firebase
+const isDev = process.env.NODE_ENV === 'development';
+
+const initialMovies = isDev && useTestData ? testMovieData : [];
+const initialUsers = isDev && useTestData ? testUserData : [];
 
 const App = () => {
-  const [movieData, setMovieData] = useState<IMovie[]>([]); //env === 'development' ? testData :
-  const [notFound, setNotFound] = useState(false);
-  const [alreadyAdded, setAlreadyAdded] = useState(false);
+  // main data
+  const [movieData, setMovieData] = useState<IMovie[]>(initialMovies);
+  const [users, setUsers] = useState<string[]>(initialUsers);
+  const [watchList, setWatchList] = useState<string[]>([]);
+  const [currUser, setCurrUser] = useState<string>('Guest');
+  const [firebaseUserId, setFirebaseUserId] = useState<string>('');
+
+  // input state
   const [newMovieAdded, setNewMovieAdded] = useState<IMovie | null>(null);
   const [movieToDelete, setMovieToDelete] = useState<IMovie | null>(null);
+  const [sortSelected, setSortSelected] = useState('');
+  const [filterSelected, setFilterSelected] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
+  const [shouldDismissModal, setShouldDismissModal] = useState(false);
+
+  // messaging and errors
+  const [actionMessage, setActionMessage] = useState('');
+  const [messageType, setMessageType] = useState<'error' | 'warn' | 'alert' | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [alreadyAdded, setAlreadyAdded] = useState(false);
   const [signInError, setSignInError] = useState('');
   const [signUpError, setSignUpError] = useState('');
   const [passwordResetError, setPasswordResetError] = useState('');
-  const [actionMessage, setActionMessage] = useState('');
-  const [messageType, setMessageType] = useState<'error' | 'warn' | 'alert' | null>(null);
-  const [sortSelected, setSortSelected] = useState('');
-  const [currUser, setCurrUser] = useState<string>('Guest');
-  const [filterSelected, setFilterSelected] = useState('');
-  const [users, setUsers] = useState<string[]>([]);
-  const [watchList, setWatchList] = useState<string[]>([]);
-  const [shouldArrowAnimate, setShouldArrowAnimate] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [shouldDismissModal, setShouldDismissModal] = useState(false);
-  const [firebaseUserId, setFirebaseUserId] = useState<string>('');
 
   // if (isDev) {
-  // renderCount +=1;
-  // console.log('render count', renderCount);
+  //   renderCount += 1;
+  //   console.log('render count', renderCount);
   // }
 
   const isSignedIn = currUser !== 'Guest' && firebaseUserId !== '';
@@ -247,15 +254,18 @@ const App = () => {
   // Get Movies
   useEffect(() => {
     async function checkFreshnessAndFetchMovies() {
-      let storageLastUpdated = storage.local.getItem('moviesLastUpdatedAt') ?? 0;
-      let fbMoviesLastUpdated = 1;
+      const oldestPossibleTime = new Date(0).getTime();
+      const latestPossibleTime = new Date().getTime();
+
+      let storageLastUpdated = JSON.parse(storage.local.getItem('moviesLastUpdatedAt') ?? JSON.stringify(oldestPossibleTime));
+      let fbMoviesLastUpdated = latestPossibleTime;
       await db
         .collection('meta')
         .doc('lastUpdated')
         .get()
-        .then((doc) => (fbMoviesLastUpdated = doc.data()?.movies ?? 1))
+        .then((doc) => (fbMoviesLastUpdated = doc.data()?.movies ?? latestPossibleTime))
         .catch((e) => console.error(e));
-      if (fbMoviesLastUpdated > +storageLastUpdated) {
+      if (fbMoviesLastUpdated > storageLastUpdated) {
         if (isDev) console.log('getting from remote');
         await db
           .collection('movies')
@@ -271,13 +281,13 @@ const App = () => {
               data.push(allData);
             });
             setMovieData(data);
+            storage.local.setItem('moviesLastUpdatedAt', JSON.stringify(fbMoviesLastUpdated));
           })
           .catch((e) => console.error(e));
       } else {
-        const md = storage.local.getItem('movieData') ?? '';
+        const md = storage.local.getItem('movieData');
         md && setMovieData([...JSON.parse(md)]);
       }
-      storage.local.setItem('moviesLastUpdatedAt', JSON.stringify(fbMoviesLastUpdated));
     }
 
     checkFreshnessAndFetchMovies().catch((e) => console.error(e));
@@ -285,26 +295,23 @@ const App = () => {
 
   // Get Users and Watchlist
   useEffect(() => {
-    async function checkFreshnessAndFetchUsers() {
+    async function fetchUsers() {
+      console.log('getting users');
       let activeUsers: string[] = [];
       let watchListData: string[] = [];
       if (!isSignedIn) {
-        try {
-          const data = storage.local.getItem('watchList') ?? '';
-          watchListData = [...JSON.parse(data)];
-        } catch (_e) {}
+        const data = storage.local.getItem('watchList');
+        if (data) watchListData = [...JSON.parse(data)];
       }
       await db
         .collection('users')
         .get()
         .then(async (querySnapshot) => {
           await querySnapshot.forEach((user) => {
-            const data = user.data();
-            if (data.isActive) activeUsers.push(data.displayName);
-            if (currUser === data.displayName) {
-              if (data.watchList) {
-                data.watchList.forEach((title: string) => watchListData.push(title));
-              }
+            const { displayName, watchList, isActive } = user.data();
+            if (isActive && displayName) activeUsers.push(displayName);
+            if (currUser === displayName && watchList.length) {
+              watchList.forEach((title: string) => watchListData.push(title));
             }
           });
         })
@@ -314,8 +321,8 @@ const App = () => {
       setWatchList(watchListData);
     }
 
-    checkFreshnessAndFetchUsers().catch((e) => console.error(e));
-  }, [currUser, isSignedIn]);
+    if (!users.length) fetchUsers().catch((e) => console.error(e));
+  }, [currUser, isSignedIn, users]);
 
   useEffect(() => {
     movieData?.length && storage.local.setItem('movieData', JSON.stringify(movieData));
@@ -326,14 +333,28 @@ const App = () => {
   }, [shouldDismissModal]);
 
   useEffect(() => {
+    signInError && setTimeout(() => setSignInError(''), 4000);
+  }, [signInError]);
+
+  useEffect(() => {
+    signUpError && setTimeout(() => setSignUpError(''), 4000);
+  }, [signUpError]);
+
+  useEffect(() => {
+    passwordResetError && setTimeout(() => setPasswordResetError(''), 4000);
+  }, [passwordResetError]);
+
+  useEffect(() => {
     async function updateLocalStorageAndFirebase() {
-      const now = new Date();
-      storage.local.setItem('lastUpdatedAt', JSON.stringify(now));
-      await db
+      const now = new Date().getTime();
+      let success = await db
         .collection('meta')
         .doc('lastUpdated')
         .set({ movies: now })
+        .then(() => true)
         .catch((e) => console.log(e));
+      console.log({ success });
+      success && storage.local.setItem('moviesLastUpdatedAt', JSON.stringify(now));
     }
     newMovieAdded && updateLocalStorageAndFirebase();
   }, [newMovieAdded]);
@@ -353,8 +374,7 @@ const App = () => {
   }, [watchList, firebaseUserId, isSignedIn]);
 
   // TODO:
-  // Add users array to local storage and set lastUpdated in firebase
-  // on every user update
+  // Add users array to local storage and set lastUpdated in firebase on every user update
 
   useEffect(() => {
     if (movieData && isSignedIn && firebaseUserId && movieData.filter((movie) => movie.creator === currUser).length <= 1) {
@@ -506,7 +526,6 @@ const App = () => {
     let userNameExists = false;
     if (name.length < 3) {
       setSignUpError(`Your name needs to be at least three letters`);
-      setTimeout(() => setSignUpError(''), 2500);
       return;
     }
     await db
@@ -519,7 +538,6 @@ const App = () => {
           if (doc.exists) {
             userNameExists = true;
             setSignUpError(`Please add your last initial to your name. A user with your name already exists!`);
-            setTimeout(() => setSignUpError(''), 2500);
           }
         });
       })
@@ -532,7 +550,6 @@ const App = () => {
       .createUserWithEmailAndPassword(email, password)
       .catch(function (error) {
         setSignUpError(`There was an error signing up: ${error}`);
-        setTimeout(() => setSignUpError(''), 2500);
       });
     const user = firebase.auth().currentUser;
     if (user) {
@@ -551,7 +568,6 @@ const App = () => {
         })
         .catch(function (error) {
           setSignUpError(`There was an error signing up: ${error}`);
-          setTimeout(() => setSignUpError(''), 2500);
         });
     }
 
@@ -569,7 +585,6 @@ const App = () => {
       })
       .catch(function (error) {
         setPasswordResetError(`There was an error sending the email: ${error}`);
-        setTimeout(() => setPasswordResetError(''), 2500);
       });
   }
 
@@ -579,7 +594,6 @@ const App = () => {
       .signInWithEmailAndPassword(email, password)
       .catch(function (error) {
         setSignInError('There was an error with these credentials');
-        setTimeout(() => setSignInError(''), 2500);
       });
     const user = firebase.auth().currentUser;
     if (user && user.emailVerified) {
@@ -608,7 +622,6 @@ const App = () => {
       setCurrUser(user?.displayName ?? 'Guest');
     } else if (user && !user.emailVerified) {
       setSignInError('You need to confirm your email before you can sign in');
-      setTimeout(() => setSignInError(''), 2500);
     }
   }
 
@@ -653,77 +666,8 @@ const App = () => {
   }, [sortSelected, movieData]);
 
   const mainData = isLoading
-    ? null
+    ? []
     : movieData.filter((movie) => regEx(searchTerm).test(movie.title) && (filterSelected === '' || movie.creator === filterSelected));
-
-  const currentlyViewing = isLoading ? (
-    <div style={{ padding: '50px 0 0 50px' }}>
-      <SyncLoader size={30} color={'darkKhaki'} />
-    </div>
-  ) : !mainData?.length ? (
-    <div style={{ fontStyle: 'italic' }}>No movies found!</div>
-  ) : (
-    mainData.map((movie) => {
-      return (
-        <Movie
-          key={movie.id}
-          {...movie}
-          currUser={currUser}
-          onDeleteMovieCallback={() => setMovieToDelete(movie)}
-          onAddToWatchlistCallback={() => handleAddToWatchlist(movie.title)}
-          isSignedIn={isSignedIn}
-        />
-      );
-    })
-  );
-
-  const message = actionMessage ? (
-    <MessageContainer type={messageType ?? 'alert'}>
-      <span>{actionMessage}</span>
-    </MessageContainer>
-  ) : null;
-
-  const searchInput = (
-    <Search
-      type="text"
-      name="Search"
-      placeholder="Search for a title"
-      value={searchTerm}
-      onChange={(e) => {
-        // prevent regex failures by removing '\' chars
-        const s = (e.target.value ?? '').replaceAll('\\', '');
-        setSearchTerm(s);
-      }}
-    />
-  );
-
-  const signInSignUpSignOutSearch = isSignedIn ? (
-    <React.Fragment>
-      <SignInSignUpWrapper>
-        <SignOut onClick={handleSignOut}>Sign Out</SignOut>
-      </SignInSignUpWrapper>
-      {searchInput}
-    </React.Fragment>
-  ) : (
-    <React.Fragment>
-      <SignInSignUpWrapper>
-        <SignInForm
-          passwordReset={handleSendPasswordReset}
-          passwordResetError={passwordResetError}
-          handleSignInCallback={handleSignIn}
-          signInError={signInError}
-          modalDismiss={shouldDismissModal}
-        />
-        or
-        <SignUpForm modalDismiss={shouldDismissModal} handleSignUpCallback={handleSignUp} signUpError={signUpError} />
-      </SignInSignUpWrapper>
-      {searchInput}
-    </React.Fragment>
-  );
-
-  const addMovie = isSignedIn && <AddMovie handleAddMovieCallback={handleAddMovie} alreadyAdded={alreadyAdded} notFound={notFound} />;
-
-  const displayUser = currUser && <WelcomeMsg>&nbsp;Hello, {currUser}</WelcomeMsg>;
 
   let modalContent: any = <NoWatchListMsg>You have not yet added any movies to your watchlist.</NoWatchListMsg>;
   if (watchList.length) {
@@ -741,34 +685,63 @@ const App = () => {
     ));
   }
 
-  const watchlist = (
-    <ToggleContent
-      toggle={(show: () => void) => (
-        <div onClick={() => setShouldArrowAnimate(true)}>
-          <WatchListContainer onClick={show}>
-            <h4 style={{ margin: '0 0.5rem 0 0' }}>My watchlist</h4>
-            <p>
-              <DownArrow animate={shouldArrowAnimate}></DownArrow>
-            </p>
-          </WatchListContainer>
-        </div>
-      )}
-      content={(hide: () => void) => (
-        <MyModal modalDismissedCallback={() => setShouldArrowAnimate(false)} hide={hide} override={shouldDismissModal}>
-          <ModalContainer>{modalContent}</ModalContainer>
-        </MyModal>
-      )}
-    />
-  );
-
   return (
     <div className="App">
-      {message}
+      {actionMessage && (
+        <MessageContainer type={messageType ?? 'alert'}>
+          <span>{actionMessage}</span>
+        </MessageContainer>
+      )}
       <TitleContainer className="titleContainer">
         <FlexHeader>
-          {signInSignUpSignOutSearch}
-          {displayUser}
-          {watchlist}
+          {isSignedIn && (
+            <SignInSignUpWrapper>
+              <SignOut onClick={handleSignOut}>Sign Out</SignOut>
+            </SignInSignUpWrapper>
+          )}
+
+          {!isSignedIn && (
+            <SignInSignUpWrapper>
+              <SignInForm
+                passwordReset={handleSendPasswordReset}
+                passwordResetError={passwordResetError}
+                handleSignInCallback={handleSignIn}
+                signInError={signInError}
+                modalDismiss={shouldDismissModal}
+              />
+              or
+              <SignUpForm modalDismiss={shouldDismissModal} handleSignUpCallback={handleSignUp} signUpError={signUpError} />
+            </SignInSignUpWrapper>
+          )}
+          <Search
+            type="text"
+            name="Search"
+            placeholder="Search for a title"
+            value={searchTerm}
+            onChange={(e) => {
+              // prevent regex failures by removing '\' chars
+              const s = (e.target.value ?? '').replaceAll('\\', '');
+              setSearchTerm(s);
+            }}
+          />
+          <WelcomeMsg>&nbsp;Hello, {currUser}</WelcomeMsg>
+          <ToggleContent
+            toggle={(show: () => void) => (
+              <div onClick={() => setShouldArrowAnimate(true)}>
+                <WatchListContainer onClick={show}>
+                  <h4 style={{ margin: '0 0.5rem 0 0' }}>My watchlist</h4>
+                  <p>
+                    <DownArrow animate={shouldArrowAnimate}></DownArrow>
+                  </p>
+                </WatchListContainer>
+              </div>
+            )}
+            content={(hide: () => void) => (
+              <MyModal modalDismissedCallback={() => setShouldArrowAnimate(false)} hide={hide} override={shouldDismissModal}>
+                <ModalContainer>{modalContent}</ModalContainer>
+              </MyModal>
+            )}
+          />
         </FlexHeader>
         <FlexHeader>
           <Flex>
@@ -799,8 +772,30 @@ const App = () => {
         </FlexHeader>
       </TitleContainer>
       <Main data-testid="main">
-        {addMovie}
-        {currentlyViewing}
+        {isSignedIn && <AddMovie handleAddMovieCallback={handleAddMovie} alreadyAdded={alreadyAdded} notFound={notFound} />}
+
+        {isLoading && (
+          <div style={{ padding: '50px 0 0 50px' }}>
+            <SyncLoader size={30} color={'darkKhaki'} />
+          </div>
+        )}
+
+        {!isLoading && !mainData.length && <div style={{ fontStyle: 'italic' }}>No movies found!</div>}
+
+        {!isLoading &&
+          mainData.length &&
+          mainData.map((movie) => {
+            return (
+              <Movie
+                key={movie.id}
+                {...movie}
+                currUser={currUser}
+                onDeleteMovieCallback={() => setMovieToDelete(movie)}
+                onAddToWatchlistCallback={() => handleAddToWatchlist(movie.title)}
+                isSignedIn={isSignedIn}
+              />
+            );
+          })}
         <ScrollArrow />
       </Main>
     </div>
