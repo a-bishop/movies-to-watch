@@ -241,15 +241,42 @@ const App = () => {
 
   const isSignedIn = currUser !== 'Guest' && firebaseUserId !== '';
   const titles = movieData.map((d) => d.title);
-  const isLoading = !movieData.length && !users.length;
+  const isLoading = movieData.length === 0 || users.length === 0;
 
-  firebase.auth().onAuthStateChanged(() => {
+  firebase.auth().onAuthStateChanged(async () => {
     const currentUser = firebase.auth().currentUser;
     if (currentUser && currentUser.emailVerified) {
-      setCurrUser(currentUser?.displayName ?? '');
-      setFirebaseUserId(currentUser.uid);
+      const displayName = currentUser?.displayName ?? '';
+      setCurrUser(displayName);
     }
   });
+
+  useEffect(() => {
+    async function syncUserTable() {
+      await db
+        .collection('users')
+        .where('displayName', '==', currUser)
+        .limit(1)
+        .get()
+        .then(function (snap) {
+          console.log('snap', snap);
+          if (snap.empty) {
+            db.collection('users')
+              .add({ displayName: currUser, isActive: false })
+              .then((docRef) => {
+                setFirebaseUserId(docRef.id);
+                console.log('fbuid', firebaseUserId);
+              })
+              .catch((e) => console.log(e));
+          } else {
+            setFirebaseUserId(snap.docs[0].id);
+          }
+        })
+        .catch((e) => console.log(e));
+    }
+
+    if (firebaseUserId === '' && currUser !== '' && currUser !== 'Guest') syncUserTable();
+  }, [currUser, firebaseUserId]);
 
   // Get Movies
   useEffect(() => {
@@ -311,7 +338,7 @@ const App = () => {
           await querySnapshot.forEach((user) => {
             const { displayName, watchList, isActive } = user.data();
             if (isActive && displayName) activeUsers.push(displayName);
-            if (currUser === displayName && watchList.length) {
+            if (currUser === displayName && watchList?.length) {
               watchList.forEach((title: string) => watchListData.push(title));
             }
           });
@@ -367,11 +394,11 @@ const App = () => {
         await await db
           .collection('users')
           .doc(firebaseUserId)
-          .set({ watchList })
+          .update({ watchList })
           .catch((e) => console.log(e));
       }
     }
-    watchList.length && updateLocalStorageAndFirebase();
+    !isLoading && updateLocalStorageAndFirebase();
   }, [watchList, firebaseUserId, isSignedIn]);
 
   // TODO:
@@ -594,30 +621,11 @@ const App = () => {
       .auth()
       .signInWithEmailAndPassword(email, password)
       .catch(function (error) {
+        console.log(error);
         setSignInError('There was an error with these credentials');
       });
     const user = firebase.auth().currentUser;
     if (user && user.emailVerified) {
-      await db
-        .collection('users')
-        .where('displayName', '==', user.displayName)
-        .limit(1)
-        .get()
-        .then(function (snap) {
-          console.log('snap', snap);
-          if (snap.empty) {
-            db.collection('users')
-              .add({ displayName: user.displayName, isActive: false })
-              .then((docRef) => {
-                setFirebaseUserId(docRef.id);
-                console.log('fbuid', firebaseUserId);
-              })
-              .catch((e) => console.log(e));
-          } else {
-            setFirebaseUserId(snap.docs[0].id);
-          }
-        })
-        .catch((e) => console.log(e));
       // close the sign in modal
       setShouldDismissModal(true);
       setCurrUser(user?.displayName ?? 'Guest');
@@ -781,10 +789,10 @@ const App = () => {
           </div>
         )}
 
-        {!isLoading && !mainData.length && <div style={{ fontStyle: 'italic' }}>No movies found!</div>}
+        {!isLoading && mainData.length === 0 && <div style={{ fontStyle: 'italic' }}>No movies found!</div>}
 
         {!isLoading &&
-          mainData.length &&
+          mainData.length > 0 &&
           mainData.map((movie) => {
             return (
               <Movie
