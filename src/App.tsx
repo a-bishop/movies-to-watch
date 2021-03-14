@@ -265,7 +265,8 @@ const App = () => {
         .get()
         .then((doc) => (fbMoviesLastUpdated = doc.data()?.movies ?? latestPossibleTime))
         .catch((e) => console.error(e));
-      if (fbMoviesLastUpdated > storageLastUpdated) {
+      // typecheck is for backwards compatibility for users with old timestamp type
+      if (typeof fbMoviesLastUpdated !== typeof storageLastUpdated || fbMoviesLastUpdated > storageLastUpdated) {
         if (isDev) console.log('getting from remote');
         await db
           .collection('movies')
