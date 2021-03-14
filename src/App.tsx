@@ -20,7 +20,11 @@ import { capitalize, toSearchString, regEx } from './helpers';
 import { IMovie } from './Types';
 import React from 'react';
 
-firebase.initializeApp(config.FIREBASE);
+if (!firebase?.apps?.length) {
+  firebase.initializeApp(config.FIREBASE);
+} else {
+  firebase.app(); // if already initialized, use that one
+}
 const db = firebase.firestore();
 
 const Main = styled.div`
